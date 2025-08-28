@@ -107,3 +107,31 @@ Modo colaborativo, onde mais de um jogador contribuirá para manter a nave funci
 
 O jogo Explorador da Matemática será uma ferramenta pedagógica inovadora, unindo tecnologia, gamificação e conteúdo escolar.
 Com sua proposta lúdica e acessível, espera-se que contribua para tornar o aprendizado da matemática mais atrativo, dinâmico e significativo, podendo ser facilmente expandido e adaptado conforme as necessidades educacionais.
+Explorador da Matemática
+========================
+
+Jogo web simples em HTML/CSS/JS: pilote uma nave enquanto resolve contas de matemática por planeta.
+
+Regras
+------
+- Planetas:
+	- Terra: adição e subtração
+	- Marte: multiplicação (desbloqueia após concluir Terra)
+	- Andrômeda: divisão (desbloqueia após concluir Marte)
+- Combustível: começa em 100, perde 5 por segundo, ao acertar +15 (máx 100)
+- Conclua todas as questões do planeta para desbloquear o próximo.
+
+Como executar
+-------------
+1. Abra o arquivo `index.html` no navegador (duplo clique). Não há dependências.
+
+Arquivos
+--------
+- `index.html`: estrutura da página e views (menu, jogo, fim)
+- `style.css`: estilos e HUD
+- `Index.js`: lógica do jogo e animação no canvas
+
+Notas
+-----
+- O progresso de desbloqueio é salvo em `localStorage`.
+- Para resetar o progresso, use o console do navegador: `localStorage.removeItem('exploradorMath')`.

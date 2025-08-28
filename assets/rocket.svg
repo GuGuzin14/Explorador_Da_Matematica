@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9bbcff"/>
+      <stop offset="100%" stop-color="#7c9cff"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffd166"/>
+      <stop offset="100%" stop-color="#ff7a00"/>
+    </linearGradient>
+  </defs>
+  <!-- body -->
+  <polygon points="10,32 42,18 42,46" fill="url(#g1)" stroke="#5d75c7" stroke-width="1"/>
+  <!-- window -->
+  <circle cx="28" cy="32" r="5" fill="#14223f" stroke="#101a33" stroke-width="1"/>
+  <!-- fins -->
+  <polygon points="18,25 10,20 10,32" fill="#6e87da"/>
+  <polygon points="18,39 10,44 10,32" fill="#6e87da"/>
+  <!-- flame -->
+  <polygon points="10,32 2,28 2,36" fill="url(#flame)"/>
+</svg>
