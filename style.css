@@ -71,6 +71,17 @@ html, body {
 
 .status { color: var(--muted); display: flex; gap: 12px; }
 
+.resources { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.res-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border: 1px solid var(--border);
+  border-radius: 999px; background: #0b1125;
+  font-size: 12px; color: var(--muted);
+}
+.res-ico { font-size: 14px; }
+.res-name { color: var(--text); font-weight: 600; }
+.res-num { color: var(--accent-2); font-weight: 700; }
+
 #views { display: grid; }
 .view { display: none; padding: 24px; }
 .view.active { display: block; }
@@ -78,7 +89,10 @@ html, body {
 /* Menu */
 #menuView { max-width: 880px; margin: 0 auto; }
 #menuView h1 { margin: 8px 0 16px; font-size: 28px; }
-.planets { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.planets { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 16px; }
+@media (max-width: 520px) {
+  .planets { grid-template-columns: 1fr 1fr; }
+}
 .planet-btn {
   display: grid;
   gap: 6px;

@@ -22,6 +22,28 @@
           <span id="planetName">—</span>
           <span id="progress">0/0</span>
         </div>
+        <div class="resources" id="resourcesHUD" aria-label="Recursos">
+          <div class="res-pill" title="Água">
+            <span class="res-ico">💧</span>
+            <span class="res-name">Água</span>
+            <span class="res-num" id="resAgua">0</span>
+          </div>
+          <div class="res-pill" title="Areia Vermelha">
+            <span class="res-ico">🏜️</span>
+            <span class="res-name">Areia</span>
+            <span class="res-num" id="resAreia">0</span>
+          </div>
+          <div class="res-pill" title="Anéis">
+            <span class="res-ico">🪐</span>
+            <span class="res-name">Anéis</span>
+            <span class="res-num" id="resAneis">0</span>
+          </div>
+          <div class="res-pill" title="Poeira Estelar">
+            <span class="res-ico">✨</span>
+            <span class="res-name">Poeira</span>
+            <span class="res-num" id="resPoeira">0</span>
+          </div>
+        </div>
       </header>
 
       <main id="views">
@@ -31,22 +53,27 @@
           <div class="planets">
             <button class="planet-btn" data-planet="terra">
               🌎 Terra
-              <small>Adição e Subtração</small>
+              <small>Adição</small>
               <span class="lock" aria-hidden="true"></span>
             </button>
             <button class="planet-btn" data-planet="marte">
               🔴 Marte
+              <small>Subtração</small>
+              <span class="lock" aria-hidden="true">🔒</span>
+            </button>
+            <button class="planet-btn" data-planet="saturno">
+              🪐 Saturno
               <small>Multiplicação</small>
               <span class="lock" aria-hidden="true">🔒</span>
             </button>
             <button class="planet-btn" data-planet="andromeda">
-              🪐 Andrômeda
+              🌌 Andrômeda
               <small>Divisão</small>
               <span class="lock" aria-hidden="true">🔒</span>
             </button>
           </div>
           <div class="legend">
-            <p>Desbloqueie Marte concluindo Terra. Desbloqueie Andrômeda concluindo Marte.</p>
+            <p>Desbloqueie Marte concluindo Terra. Desbloqueie Saturno concluindo Marte. Desbloqueie Andrômeda concluindo Saturno.</p>
           </div>
         </section>
 

@@ -115,9 +115,10 @@ Jogo web simples em HTML/CSS/JS: pilote uma nave enquanto resolve contas de mate
 Regras
 ------
 - Planetas:
-	- Terra: adição e subtração
-	- Marte: multiplicação (desbloqueia após concluir Terra)
-	- Andrômeda: divisão (desbloqueia após concluir Marte)
+	- Terra: adição
+	- Marte: subtração (desbloqueia após concluir Terra)
+	- Saturno: multiplicação (desbloqueia após concluir Marte)
+	- Andrômeda: divisão (desbloqueia após concluir Saturno)
 - Combustível: começa em 100, perde 5 por segundo, ao acertar +15 (máx 100)
 - Conclua todas as questões do planeta para desbloquear o próximo.
 
