@@ -258,3 +258,18 @@ button.link {
 .upgrade-actions { display: flex; gap: 8px; align-items: center; }
 .upgrade-level { color: var(--accent-2); font-weight: 700; }
 .btn-buy[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+/* Níveis por planeta */
+.level-buttons {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 12px;
+}
+.level-btn {
+  display: grid; gap: 6px; place-items: start;
+  padding: 14px; border: 1px solid var(--border); border-radius: 12px;
+  background: #0b1125; color: var(--text);
+}
+.level-btn small { color: var(--muted); }
+.level-btn.completed { opacity: 0.6; filter: grayscale(0.2); }

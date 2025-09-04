@@ -22,15 +22,22 @@
 	let questionReduction = 0; // reduz número de questões por planeta
 	let jackpotChance = 0; // chance de dobrar recompensa ao concluir
 
+		const levelConfigs = {
+			1: { add:[1,50], subA:[20,99], subB:[1,50], mul:[2,9], div:[2,9], fuelLossMul: 1.0 },
+			2: { add:[20,120], subA:[40,140], subB:[10,120], mul:[3,12], div:[3,12], fuelLossMul: 1.1 },
+			3: { add:[60,200], subA:[80,220], subB:[30,180], mul:[6,14], div:[6,14], fuelLossMul: 1.2 },
+		};
+
 		const planets = {
 			terra: {
 				name: 'Terra',
 				icon: '🌎',
 				op: ['+'],
 				questionCount: 8,
-				gen() {
-					const a = randInt(1, 90);
-					const b = randInt(1, 90);
+				gen(level=1) {
+					const cfg = levelConfigs[level] || levelConfigs[1];
+					const a = randInt(cfg.add[0], cfg.add[1]);
+					const b = randInt(cfg.add[0], cfg.add[1]);
 					return { text: `${a} + ${b} = ?`, answer: a + b };
 				},
 			},
@@ -39,9 +46,10 @@
 				icon: '🔴',
 				op: ['-'],
 				questionCount: 8,
-				gen() {
-					let a = randInt(10, 99);
-					let b = randInt(1, 90);
+				gen(level=1) {
+					const cfg = levelConfigs[level] || levelConfigs[1];
+					let a = randInt(cfg.subA[0], cfg.subA[1]);
+					let b = randInt(cfg.subB[0], cfg.subB[1]);
 					if (b > a) [a, b] = [b, a];
 					return { text: `${a} - ${b} = ?`, answer: a - b };
 				},
@@ -51,9 +59,10 @@
 				icon: '🪐',
 				op: ['×'],
 				questionCount: 8,
-				gen() {
-					const a = randInt(2, 12);
-					const b = randInt(2, 12);
+				gen(level=1) {
+					const cfg = levelConfigs[level] || levelConfigs[1];
+					const a = randInt(cfg.mul[0], cfg.mul[1]);
+					const b = randInt(cfg.mul[0], cfg.mul[1]);
 					return { text: `${a} × ${b} = ?`, answer: a * b };
 				},
 			},
@@ -62,9 +71,10 @@
 				icon: '🌌',
 				op: ['÷'],
 				questionCount: 8,
-				gen() {
-					const b = randInt(2, 12);
-					const q = randInt(2, 12);
+				gen(level=1) {
+					const cfg = levelConfigs[level] || levelConfigs[1];
+					const b = randInt(cfg.div[0], cfg.div[1]);
+					const q = randInt(cfg.div[0], cfg.div[1]);
 					const a = b * q; // a ÷ b = q
 					return { text: `${a} ÷ ${b} = ?`, answer: q };
 				},
@@ -92,6 +102,9 @@
 	const endView = $('#endView');
 
 	const planetButtons = Array.from(document.querySelectorAll('.planet-btn'));
+	const levelModal = document.querySelector('#levelModal');
+	const levelButtons = document.querySelector('#levelButtons');
+	const closeLevelBtn = document.querySelector('#closeLevel');
 	const questionTitle = $('#questionTitle');
 	const questionText = $('#questionText');
 	const answerForm = $('#answerForm');
@@ -118,12 +131,13 @@
 	};
 		// Migração simples para novo fluxo com Saturno
 			const loaded = load();
-			const state = loaded || { unlocked: { terra: true, marte: false, saturno: false, andromeda: false }, resources: { agua: 0, areia: 0, aneis: 0, poeira: 0 }, upgrades: {} };
+			const state = loaded || { unlocked: { terra: true, marte: false, saturno: false, andromeda: false }, resources: { agua: 0, areia: 0, aneis: 0, poeira: 0 }, upgrades: {}, levels: { terra:[false,false,false], marte:[false,false,false], saturno:[false,false,false], andromeda:[false,false,false] } };
 		if (!state.unlocked) state.unlocked = { terra: true, marte: false, saturno: false, andromeda: false };
 		if (state.unlocked && state.unlocked.andromeda === undefined) state.unlocked.andromeda = false;
 		if (state.unlocked && state.unlocked.saturno === undefined) state.unlocked.saturno = false;
 			if (!state.resources) state.resources = { agua: 0, areia: 0, aneis: 0, poeira: 0 };
 			if (!state.upgrades) state.upgrades = {};
+			if (!state.levels) state.levels = { terra:[false,false,false], marte:[false,false,false], saturno:[false,false,false], andromeda:[false,false,false] };
 	save(state);
 
 	// Upgrades e Loja
@@ -309,11 +323,13 @@
 
 	// Jogo em andamento
 	let currentPlanetKey = null;
+	let currentLevel = 1;
 	let currentQuestionIndex = 0;
 	let totalQuestions = 0;
 	let fuel = initialFuel;
 	let timerId = null;
 	let running = false;
+	let levelFuelLossMultiplier = 1;
 		let pathProgress = 0; // 0..100
 
 		// Progresso visual da nave
@@ -354,7 +370,7 @@
 			if (!running) return;
 			const dt = (now - last) / 1000;
 			last = now;
-			const loss = fuelLossPerSec * dt;
+			const loss = fuelLossPerSec * levelFuelLossMultiplier * dt;
 			// usar frações para suavidade; exibir inteiro
 			fuel = Math.max(0, fuel - loss);
 			updateFuelHUD();
@@ -402,7 +418,8 @@
 		planetName.textContent = '—';
 		progressEl.textContent = '0/0';
 		feedback.textContent = '';
-		refreshMenuLocks();
+			refreshMenuLocks();
+			updateProgressHUD();
 	}
 
 	// Perguntas
@@ -416,8 +433,8 @@
 				if (currentPlanetKey === 'terra') state.unlocked.marte = true;
 				if (currentPlanetKey === 'marte') state.unlocked.saturno = true;
 				if (currentPlanetKey === 'saturno') state.unlocked.andromeda = true;
-					// Recompensa base 3–6, com bônus de upgrade
-					let reward = randInt(3, 6);
+					// Recompensa base 3–6 escala com o nível (1: x1.0, 2: x1.4, 3: x1.8)
+					let reward = Math.round(randInt(3, 6) * (1 + (currentLevel - 1) * 0.4));
 					reward += getUpgradeLevel('resourceBonus');
 					let jackpotHit = false;
 					if (Math.random() < jackpotChance) { reward *= 2; jackpotHit = true; }
@@ -427,16 +444,26 @@
 					if (currentPlanetKey === 'saturno') { resKey = 'aneis'; resName = 'Anéis'; }
 					if (currentPlanetKey === 'andromeda') { resKey = 'poeira'; resName = 'Poeira Estelar'; }
 					if (resKey) state.resources[resKey] = (state.resources[resKey] || 0) + reward;
+					// Marcar nível concluído
+					const lvls = state.levels[currentPlanetKey] || [false,false,false];
+					lvls[currentLevel - 1] = true;
+					state.levels[currentPlanetKey] = lvls;
+					// Se os 3 níveis concluídos, desbloquear próximo planeta
+					if (lvls.every(Boolean)) {
+						if (currentPlanetKey === 'terra') state.unlocked.marte = true;
+						if (currentPlanetKey === 'marte') state.unlocked.saturno = true;
+						if (currentPlanetKey === 'saturno') state.unlocked.andromeda = true;
+					}
 					save(state);
 					updateProgressHUD();
 					endTitle.textContent = 'Parabéns!';
-					const isLast = currentPlanetKey === 'andromeda';
-					const unlockMsg = isLast ? 'Você finalizou a missão!' : 'Planeta seguinte desbloqueado.';
-					endMessage.textContent = `${planet.icon} ${planet.name} concluído! +${reward} ${resName}. ${unlockMsg}${jackpotHit ? ' Bônus estelar x2!' : ''}`;
+					const doneCount = (state.levels[currentPlanetKey] || []).filter(Boolean).length;
+					const unlockMsg = doneCount >= 3 ? 'Planeta seguinte desbloqueado.' : `Progresso: ${doneCount}/3 níveis concluídos.`;
+					endMessage.textContent = `${planet.icon} ${planet.name} Nível ${currentLevel} concluído! +${reward} ${resName}. ${unlockMsg}${jackpotHit ? ' Bônus estelar x2!' : ''}`;
 			show(endView);
 			return;
 		}
-		const q = planet.gen();
+		const q = planet.gen(currentLevel);
 		questionTitle.textContent = `${planet.icon} ${planet.name}`;
 		questionText.textContent = q.text;
 		feedback.textContent = '';
@@ -447,12 +474,14 @@
 		updateProgressHUD();
 	}
 
-	function startPlanet(key) {
+	function startPlanet(key, level=1) {
 		currentPlanetKey = key;
+		currentLevel = clamp(level, 1, 3);
 		currentQuestionIndex = 0;
 			// aplica redução de questões com mínimo 4
 			const baseQ = planets[key].questionCount;
 			totalQuestions = clamp(baseQ - questionReduction, 4, baseQ);
+		levelFuelLossMultiplier = (levelConfigs[currentLevel] || levelConfigs[1]).fuelLossMul || 1;
 		fuel = initialFuel;
 		setPathProgress(0);
 		updateFuelHUD();
@@ -474,7 +503,22 @@
 		btn.addEventListener('click', () => {
 			const key = btn.getAttribute('data-planet');
 			if (!state.unlocked[key]) return;
-			startPlanet(key);
+			// abrir modal de seleção de nível
+			if (!levelModal || !levelButtons) { startPlanet(key); return; }
+			// montar botões de nível
+			levelButtons.innerHTML = '';
+			const lvls = state.levels[key] || [false,false,false];
+			for (let i=0;i<3;i++) {
+				const b = document.createElement('button');
+				b.className = 'level-btn' + (lvls[i] ? ' completed' : '');
+				b.innerHTML = `<strong>Nível ${i+1}</strong><small>${lvls[i] ? 'Concluído' : 'Recompensas maiores'}</small>`;
+				b.addEventListener('click', () => {
+					levelModal.setAttribute('aria-hidden','true');
+					startPlanet(key, i+1);
+				});
+				levelButtons.appendChild(b);
+			}
+			levelModal.setAttribute('aria-hidden','false');
 		});
 	});
 
@@ -526,6 +570,9 @@
 	if (openShopBtn) openShopBtn.addEventListener('click', openShop);
 	if (closeShopBtn) closeShopBtn.addEventListener('click', closeShop);
 	if (shopModal) shopModal.addEventListener('click', (e) => { if (e.target === shopModal) closeShop(); });
+	// Eventos modal de níveis
+	if (closeLevelBtn) closeLevelBtn.addEventListener('click', () => levelModal && levelModal.setAttribute('aria-hidden','true'));
+	if (levelModal) levelModal.addEventListener('click', (e) => { if (e.target === levelModal) levelModal.setAttribute('aria-hidden','true'); });
 
 	// Animação de fundo: estrela + nave simples
 	const ctx = bg.getContext('2d');
@@ -745,6 +792,7 @@
 	updateFuelHUD();
 	refreshMenuLocks();
 	applyAllUpgrades();
+	updateProgressHUD();
 	show(menuView);
 })();
 
