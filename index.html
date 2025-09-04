@@ -43,6 +43,7 @@
             <span class="res-name">Poeira</span>
             <span class="res-num" id="resPoeira">0</span>
           </div>
+          <button id="openShop" class="btn-shop" title="Abrir Loja">🛒 Loja</button>
         </div>
       </header>
 
@@ -110,6 +111,18 @@
           </div>
         </section>
       </main>
+    </div>
+
+    <!-- Modal da Loja -->
+    <div id="shopModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="shopTitle">
+      <div class="modal-content shop">
+        <div class="modal-header">
+          <h2 id="shopTitle">Loja de Upgrades</h2>
+          <button id="closeShop" class="icon-btn" aria-label="Fechar">✖</button>
+        </div>
+        <p class="muted">Gaste recursos para turbinar sua nave e sua expedição.</p>
+        <div id="shopList" class="shop-list"></div>
+      </div>
     </div>
 
     <script src="Index.js"></script>

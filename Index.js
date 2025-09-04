@@ -14,9 +14,13 @@
 	const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 
 	// Estado
-	const initialFuel = 100;
-	const fuelLossPerSec = 5; // por segundo
-	const fuelGainOnCorrect = 15;
+	let initialFuel = 100; // pode aumentar com upgrade
+	let fuelLossPerSec = 5; // por segundo
+	let fuelGainOnCorrect = 15; // pode aumentar via upgrade de eficiência de acerto
+	const baseFuelLossPerSec = 5;
+	let progressPerCorrectMultiplier = 1; // aumenta o avanço na trilha por acerto
+	let questionReduction = 0; // reduz número de questões por planeta
+	let jackpotChance = 0; // chance de dobrar recompensa ao concluir
 
 		const planets = {
 			terra: {
@@ -74,6 +78,10 @@
 	const fuelValue = $('#fuelValue');
 	const planetName = $('#planetName');
 	const progressEl = $('#progress');
+	const openShopBtn = $('#openShop');
+	const shopModal = $('#shopModal');
+	const closeShopBtn = $('#closeShop');
+	const shopList = $('#shopList');
 		const resAguaEl = $('#resAgua');
 		const resAreiaEl = $('#resAreia');
 		const resAneisEl = $('#resAneis');
@@ -110,12 +118,194 @@
 	};
 		// Migração simples para novo fluxo com Saturno
 			const loaded = load();
-			const state = loaded || { unlocked: { terra: true, marte: false, saturno: false, andromeda: false }, resources: { agua: 0, areia: 0, aneis: 0, poeira: 0 } };
+			const state = loaded || { unlocked: { terra: true, marte: false, saturno: false, andromeda: false }, resources: { agua: 0, areia: 0, aneis: 0, poeira: 0 }, upgrades: {} };
 		if (!state.unlocked) state.unlocked = { terra: true, marte: false, saturno: false, andromeda: false };
 		if (state.unlocked && state.unlocked.andromeda === undefined) state.unlocked.andromeda = false;
 		if (state.unlocked && state.unlocked.saturno === undefined) state.unlocked.saturno = false;
 			if (!state.resources) state.resources = { agua: 0, areia: 0, aneis: 0, poeira: 0 };
+			if (!state.upgrades) state.upgrades = {};
 	save(state);
+
+	// Upgrades e Loja
+	// Estrutura: cada upgrade tem maxLevel, baseCost (por recurso), scale, apply(level)
+	const upgradesDef = {
+		fuelCapacity: {
+			id: 'fuelCapacity',
+			name: 'Tanque Expansível',
+			desc: 'Aumenta o combustível máximo em +20 por nível.',
+			icon: '🛢️',
+			maxLevel: 5,
+			baseCost: { agua: 4 },
+			scale: 1.6,
+			apply(level) {
+				initialFuel = 100 + 20 * level;
+				if (fuel > initialFuel) fuel = initialFuel;
+				updateFuelHUD();
+			},
+		},
+		fuelEfficiency: {
+			id: 'fuelEfficiency',
+			name: 'Reator Otimizado',
+			desc: 'Acertos rendem +3 de combustível por nível.',
+			icon: '⚙️',
+			maxLevel: 5,
+			baseCost: { areia: 4 },
+			scale: 1.6,
+			apply(level) {
+				fuelGainOnCorrect = 15 + 3 * level;
+			},
+		},
+		resourceBonus: {
+			id: 'resourceBonus',
+			name: 'Coletor Avançado',
+			desc: 'Ganha +1 recurso de recompensa por nível.',
+			icon: '📦',
+			maxLevel: 5,
+			baseCost: { aneis: 3 },
+			scale: 1.7,
+			apply(level) {
+				// aplicado ao gerar recompensa no fim do planeta
+			},
+		},
+		// Novos upgrades (substituindo a conversão de poeira)
+		timeDilation: {
+			id: 'timeDilation',
+			name: 'Cristal de Estase',
+			desc: 'Reduz o consumo por segundo em ~8% por nível (mín. 40%).',
+			icon: '⏳',
+			maxLevel: 5,
+			baseCost: { poeira: 4 },
+			scale: 1.7,
+			apply(level) {
+				const mult = Math.max(0.4, 1 - 0.08 * level);
+				fuelLossPerSec = baseFuelLossPerSec * mult;
+			},
+		},
+		astroNavigation: {
+			id: 'astroNavigation',
+			name: 'Navegação Autônoma',
+			desc: 'Reduz 1 questão por planeta por nível.',
+			icon: '🧭',
+			maxLevel: 2,
+			baseCost: { areia: 6 },
+			scale: 1.5,
+			apply(level) {
+				questionReduction = level;
+			},
+		},
+		starJackpot: {
+			id: 'starJackpot',
+			name: 'Sorte Estelar',
+			desc: 'Até +8% de chance por nível de dobrar a recompensa do planeta.',
+			icon: '🌠',
+			maxLevel: 4,
+			baseCost: { poeira: 5 },
+			scale: 1.7,
+			apply(level) {
+				jackpotChance = 0.08 * level;
+			},
+		},
+	};
+
+	function getUpgradeLevel(id) { return state.upgrades[id] || 0; }
+	function setUpgradeLevel(id, lvl) { state.upgrades[id] = lvl; save(state); }
+	function computeCost(baseCost, scale, level) {
+		// custo do próximo nível (level atual -> comprar level+1)
+		const next = {};
+		for (const k in baseCost) {
+			const v = Math.ceil(baseCost[k] * Math.pow(scale, level));
+			next[k] = v;
+		}
+		return next;
+	}
+
+	function hasResources(cost) {
+		for (const k in cost) if ((state.resources[k] || 0) < cost[k]) return false;
+		return true;
+	}
+	function spendResources(cost) {
+		for (const k in cost) state.resources[k] = (state.resources[k] || 0) - cost[k];
+		save(state); updateProgressHUD();
+	}
+
+	function applyAllUpgrades() {
+		for (const id in upgradesDef) {
+			const lvl = getUpgradeLevel(id);
+			upgradesDef[id].apply(lvl);
+		}
+	}
+
+	function renderShop() {
+		if (!shopList) return;
+		shopList.innerHTML = '';
+		const frag = document.createDocumentFragment();
+		for (const id in upgradesDef) {
+			const def = upgradesDef[id];
+			const lvl = getUpgradeLevel(id);
+			const card = document.createElement('div');
+			card.className = 'upgrade-card';
+			const title = document.createElement('div');
+			title.className = 'upgrade-title';
+			title.textContent = `${def.icon} ${def.name}`;
+			const desc = document.createElement('div');
+			desc.className = 'upgrade-desc';
+			desc.textContent = def.desc;
+			const meta = document.createElement('div');
+			meta.className = 'upgrade-meta';
+			const levelEl = document.createElement('span');
+			levelEl.className = 'upgrade-level';
+			levelEl.textContent = `Nível: ${lvl}/${def.maxLevel}`;
+			meta.appendChild(levelEl);
+			const actions = document.createElement('div');
+			actions.className = 'upgrade-actions';
+
+			if (lvl < def.maxLevel) {
+				const cost = computeCost(def.baseCost, def.scale, lvl);
+				const costsWrap = document.createElement('div');
+				for (const k in cost) {
+					const pill = document.createElement('span');
+					pill.className = 'cost-pill';
+					const label = ({agua:'💧', areia:'🏜️', aneis:'🪐', poeira:'✨'})[k] || k;
+					pill.textContent = `${label} ${cost[k]}`;
+					costsWrap.appendChild(pill);
+				}
+				const btn = document.createElement('button');
+				btn.className = 'btn-buy';
+				btn.textContent = 'Comprar';
+				btn.disabled = !hasResources(cost);
+				btn.addEventListener('click', () => {
+					if (!hasResources(cost)) return;
+					spendResources(cost);
+					setUpgradeLevel(id, lvl + 1);
+					upgradesDef[id].apply(lvl + 1);
+					renderShop();
+				});
+				actions.appendChild(costsWrap);
+				actions.appendChild(btn);
+			} else {
+				const done = document.createElement('span');
+				done.className = 'muted';
+				done.textContent = 'Máximo alcançado';
+				actions.appendChild(done);
+			}
+
+			// ações extras: n/a
+
+			card.appendChild(title);
+			card.appendChild(desc);
+			card.appendChild(meta);
+			card.appendChild(actions);
+			frag.appendChild(card);
+		}
+		shopList.appendChild(frag);
+	}
+
+	function openShop() {
+		if (!shopModal) return;
+		shopModal.setAttribute('aria-hidden', 'false');
+		renderShop();
+	}
+	function closeShop() { if (shopModal) shopModal.setAttribute('aria-hidden','true'); }
 
 	// Jogo em andamento
 	let currentPlanetKey = null;
@@ -226,8 +416,11 @@
 				if (currentPlanetKey === 'terra') state.unlocked.marte = true;
 				if (currentPlanetKey === 'marte') state.unlocked.saturno = true;
 				if (currentPlanetKey === 'saturno') state.unlocked.andromeda = true;
-					// Recompensa de recursos 3–6 conforme o planeta
-					const reward = randInt(3, 6);
+					// Recompensa base 3–6, com bônus de upgrade
+					let reward = randInt(3, 6);
+					reward += getUpgradeLevel('resourceBonus');
+					let jackpotHit = false;
+					if (Math.random() < jackpotChance) { reward *= 2; jackpotHit = true; }
 					let resKey = null, resName = '';
 					if (currentPlanetKey === 'terra') { resKey = 'agua'; resName = 'Água'; }
 					if (currentPlanetKey === 'marte') { resKey = 'areia'; resName = 'Areia Vermelha'; }
@@ -239,7 +432,7 @@
 					endTitle.textContent = 'Parabéns!';
 					const isLast = currentPlanetKey === 'andromeda';
 					const unlockMsg = isLast ? 'Você finalizou a missão!' : 'Planeta seguinte desbloqueado.';
-					endMessage.textContent = `${planet.icon} ${planet.name} concluído! +${reward} ${resName}. ${unlockMsg}`;
+					endMessage.textContent = `${planet.icon} ${planet.name} concluído! +${reward} ${resName}. ${unlockMsg}${jackpotHit ? ' Bônus estelar x2!' : ''}`;
 			show(endView);
 			return;
 		}
@@ -257,7 +450,9 @@
 	function startPlanet(key) {
 		currentPlanetKey = key;
 		currentQuestionIndex = 0;
-		totalQuestions = planets[key].questionCount;
+			// aplica redução de questões com mínimo 4
+			const baseQ = planets[key].questionCount;
+			totalQuestions = clamp(baseQ - questionReduction, 4, baseQ);
 		fuel = initialFuel;
 		setPathProgress(0);
 		updateFuelHUD();
@@ -291,11 +486,11 @@
 		if (Number.isNaN(val)) return;
 			if (val === expected) {
 			currentQuestionIndex++;
-			feedback.textContent = 'Correto! +15 combustível';
+			feedback.textContent = `Correto! +${fuelGainOnCorrect} combustível`;
 			feedback.className = 'feedback ok';
 				fuel = clamp(fuel + fuelGainOnCorrect, 0, initialFuel);
 				// Avança nave: distribuir 100% pelas questões do planeta
-				const step = 100 / totalQuestions;
+				const step = (100 / totalQuestions) * progressPerCorrectMultiplier;
 				setPathProgress(pathProgress + step);
 				// Concluir fase se progresso >= 100 (mesmo que por arredondamento antes da última pergunta)
 				if (pathProgress >= 100 || currentQuestionIndex >= totalQuestions) {
@@ -326,6 +521,11 @@
 		if (currentPlanetKey) startPlanet(currentPlanetKey);
 		else toMenu();
 	});
+
+	// Eventos da Loja
+	if (openShopBtn) openShopBtn.addEventListener('click', openShop);
+	if (closeShopBtn) closeShopBtn.addEventListener('click', closeShop);
+	if (shopModal) shopModal.addEventListener('click', (e) => { if (e.target === shopModal) closeShop(); });
 
 	// Animação de fundo: estrela + nave simples
 	const ctx = bg.getContext('2d');
@@ -544,6 +744,7 @@
 	// Inicialização
 	updateFuelHUD();
 	refreshMenuLocks();
+	applyAllUpgrades();
 	show(menuView);
 })();
 

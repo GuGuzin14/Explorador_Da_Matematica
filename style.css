@@ -86,6 +86,17 @@ html, body {
 .view { display: none; padding: 24px; }
 .view.active { display: block; }
 
+/* Botão da Loja no HUD */
+.btn-shop {
+  margin-left: 8px;
+  background: #2a366b;
+  border-color: #39489a;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+.btn-shop:hover { filter: brightness(1.1); }
+
 /* Menu */
 #menuView { max-width: 880px; margin: 0 auto; }
 #menuView h1 { margin: 8px 0 16px; font-size: 28px; }
@@ -202,3 +213,48 @@ button.link {
   .fuel-bar { width: 180px; }
   #answerForm { flex-direction: column; }
 }
+
+/* Modal base */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none; align-items: center; justify-content: center;
+  z-index: 10;
+}
+.modal[aria-hidden="false"] { display: flex; }
+.modal-content {
+  width: min(880px, 92vw);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px #0008;
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.icon-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--muted);
+  padding: 6px 10px; border-radius: 8px;
+}
+.muted { color: var(--muted); }
+
+/* Loja */
+.shop-list {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.upgrade-card {
+  background: #0b1125;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid; gap: 8px;
+}
+.upgrade-title { font-weight: 700; }
+.upgrade-desc { color: var(--muted); font-size: 13px; }
+.upgrade-meta { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px; }
+.cost-pill { display: inline-flex; gap: 6px; align-items: center; padding: 4px 8px; border: 1px solid var(--border); border-radius: 999px; background: #0a0f22; }
+.upgrade-actions { display: flex; gap: 8px; align-items: center; }
+.upgrade-level { color: var(--accent-2); font-weight: 700; }
+.btn-buy[disabled] { opacity: 0.6; cursor: not-allowed; }
