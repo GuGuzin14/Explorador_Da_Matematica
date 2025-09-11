@@ -548,7 +548,7 @@
 			feedback.textContent = 'Ops, tente novamente!';
 			feedback.className = 'feedback err';
 				// Penalidade: pequeno recuo na trilha (5%)
-				setPathProgress(pathProgress - 5);
+				// setPathProgress(pathProgress - 5);
 				// Sem penalidade extra além do tempo/combustível correndo
 			answerInput.select();
 		}
@@ -795,4 +795,3 @@
 	updateProgressHUD();
 	show(menuView);
 })();
-

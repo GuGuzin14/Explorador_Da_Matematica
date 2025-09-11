@@ -1,132 +1,134 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Explorador da Matemática</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <canvas id="bg"></canvas>
 
-    <div id="ui">
-      <header id="hud">
-        <div class="fuel">
-          <div class="fuel-label">Combustível</div>
-          <div class="fuel-bar">
-            <div class="fuel-fill" id="fuelFill" style="width: 100%"></div>
-          </div>
-          <div class="fuel-value" id="fuelValue">100 / 100</div>
-        </div>
-        <div class="status">
-          <span id="planetName">—</span>
-          <span id="progress">0/0</span>
-        </div>
-        <div class="resources" id="resourcesHUD" aria-label="Recursos">
-          <div class="res-pill" title="Água">
-            <span class="res-ico">💧</span>
-            <span class="res-name">Água</span>
-            <span class="res-num" id="resAgua">0</span>
-          </div>
-          <div class="res-pill" title="Areia Vermelha">
-            <span class="res-ico">🏜️</span>
-            <span class="res-name">Areia</span>
-            <span class="res-num" id="resAreia">0</span>
-          </div>
-          <div class="res-pill" title="Anéis">
-            <span class="res-ico">🪐</span>
-            <span class="res-name">Anéis</span>
-            <span class="res-num" id="resAneis">0</span>
-          </div>
-          <div class="res-pill" title="Poeira Estelar">
-            <span class="res-ico">✨</span>
-            <span class="res-name">Poeira</span>
-            <span class="res-num" id="resPoeira">0</span>
-          </div>
-          <button id="openShop" class="btn-shop" title="Abrir Loja">🛒 Loja</button>
-        </div>
-      </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explorador da Matemática</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-      <main id="views">
-        <section id="menuView" class="view active">
-          <h1>Explorador da Matemática</h1>
-          <p>Escolha um planeta para começar:</p>
-          <div class="planets">
-            <button class="planet-btn" data-planet="terra">
-              🌎 Terra
-              <small>Adição</small>
-              <span class="lock" aria-hidden="true"></span>
-            </button>
-            <button class="planet-btn" data-planet="marte">
-              🔴 Marte
-              <small>Subtração</small>
-              <span class="lock" aria-hidden="true">🔒</span>
-            </button>
-            <button class="planet-btn" data-planet="saturno">
-              🪐 Saturno
-              <small>Multiplicação</small>
-              <span class="lock" aria-hidden="true">🔒</span>
-            </button>
-            <button class="planet-btn" data-planet="andromeda">
-              🌌 Andrômeda
-              <small>Divisão</small>
-              <span class="lock" aria-hidden="true">🔒</span>
-            </button>
-          </div>
-          <div class="legend">
-            <p>Desbloqueie Marte concluindo Terra. Desbloqueie Saturno concluindo Marte. Desbloqueie Andrômeda concluindo Saturno.</p>
-          </div>
-        </section>
+<body>
+  <canvas id="bg"></canvas>
 
-        <section id="gameView" class="view">
-          <div class="card">
-            <div class="path" aria-label="Progresso da missão">
-              <div class="path-track">
-                <div class="path-fill" id="pathFill" style="width:0%"></div>
-                <div class="path-goal" title="Objetivo">🏁</div>
-                <div class="path-ship" id="pathShip" title="Sua nave">
-                  <img src="assets/u83m_csg2_210525-removebg-preview-removebg-preview.png" alt="Foguete" />
-                </div>
+  <div id="ui">
+    <header id="hud">
+      <div class="fuel">
+        <div class="fuel-label">Combustível</div>
+        <div class="fuel-bar">
+          <div class="fuel-fill" id="fuelFill" style="width: 100%"></div>
+        </div>
+        <div class="fuel-value" id="fuelValue">100 / 100</div>
+      </div>
+      <div class="status">
+        <span id="planetName">—</span>
+        <span id="progress">0/0</span>
+      </div>
+      <div class="resources" id="resourcesHUD" aria-label="Recursos">
+        <div class="res-pill" title="Água">
+          <span class="res-ico">💧</span>
+          <span class="res-name">Água</span>
+          <span class="res-num" id="resAgua">0</span>
+        </div>
+        <div class="res-pill" title="Areia Vermelha">
+          <span class="res-ico">🏜️</span>
+          <span class="res-name">Areia</span>
+          <span class="res-num" id="resAreia">0</span>
+        </div>
+        <div class="res-pill" title="Anéis">
+          <span class="res-ico">🪐</span>
+          <span class="res-name">Anéis</span>
+          <span class="res-num" id="resAneis">0</span>
+        </div>
+        <div class="res-pill" title="Poeira Estelar">
+          <span class="res-ico">✨</span>
+          <span class="res-name">Poeira</span>
+          <span class="res-num" id="resPoeira">0</span>
+        </div>
+        <button id="openShop" class="btn-shop" title="Abrir Loja">🛒 Loja</button>
+      </div>
+    </header>
+
+    <main id="views">
+      <section id="menuView" class="view active">
+        <h1>Explorador da Matemática</h1>
+        <p>Escolha um planeta para começar:</p>
+        <div class="planets">
+          <button class="planet-btn" data-planet="terra">
+            🌎 Terra
+            <small>Adição</small>
+            <span class="lock" aria-hidden="true"></span>
+          </button>
+          <button class="planet-btn" data-planet="marte">
+            🔴 Marte
+            <small>Subtração</small>
+            <span class="lock" aria-hidden="true">🔒</span>
+          </button>
+          <button class="planet-btn" data-planet="saturno">
+            🪐 Saturno
+            <small>Multiplicação</small>
+            <span class="lock" aria-hidden="true">🔒</span>
+          </button>
+          <button class="planet-btn" data-planet="andromeda">
+            🌌 Andrômeda
+            <small>Divisão</small>
+            <span class="lock" aria-hidden="true">🔒</span>
+          </button>
+        </div>
+        <div class="legend">
+          <p>Conclua qualquer nível do planeta anterior para desbloquear o próximo.</p>
+        </div>
+      </section>
+
+      <section id="gameView" class="view">
+        <div class="card">
+          <div class="path" aria-label="Progresso da missão">
+            <div class="path-track">
+              <div class="path-fill" id="pathFill" style="width:0%"></div>
+              <div class="path-goal" title="Objetivo">🏁</div>
+              <div class="path-ship" id="pathShip" title="Sua nave">
+                <img src="assets/u83m_csg2_210525-removebg-preview-removebg-preview.png" alt="Foguete" />
               </div>
             </div>
-            <h2 id="questionTitle">Pergunta</h2>
-            <div class="question" id="questionText">—</div>
-            <form id="answerForm">
-              <input type="number" id="answerInput" placeholder="Sua resposta" autocomplete="off" inputmode="numeric" />
-              <button type="submit" id="submitAnswer">Responder</button>
-            </form>
-            <div class="feedback" id="feedback"></div>
-            <button id="giveUp" class="link">Desistir e voltar ao menu</button>
           </div>
-        </section>
-
-        <section id="endView" class="view">
-          <div class="card center">
-            <h2 id="endTitle">Fim</h2>
-            <p id="endMessage">—</p>
-            <div class="actions">
-              <button id="backToMenu">Voltar ao Menu</button>
-              <button id="retryPlanet">Tentar Novamente</button>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-
-    <!-- Modal da Loja -->
-    <div id="shopModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="shopTitle">
-      <div class="modal-content shop">
-        <div class="modal-header">
-          <h2 id="shopTitle">Loja de Upgrades</h2>
-          <button id="closeShop" class="icon-btn" aria-label="Fechar">✖</button>
+          <h2 id="questionTitle">Pergunta</h2>
+          <div class="question" id="questionText">—</div>
+          <form id="answerForm">
+            <input type="number" id="answerInput" placeholder="Sua resposta" autocomplete="off" inputmode="numeric" />
+            <button type="submit" id="submitAnswer">Responder</button>
+          </form>
+          <div class="feedback" id="feedback"></div>
+          <button id="giveUp" class="link">Desistir e voltar ao menu</button>
         </div>
-        <p class="muted">Gaste recursos para turbinar sua nave e sua expedição.</p>
-        <div id="shopList" class="shop-list"></div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Modal de Níveis por Planeta -->
-    <div id="levelModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="levelTitle">
+      <section id="endView" class="view">
+        <div class="card center">
+          <h2 id="endTitle">Fim</h2>
+          <p id="endMessage">—</p>
+          <div class="actions">
+            <button id="backToMenu">Voltar ao Menu</button>
+            <button id="retryPlanet">Tentar Novamente</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal da Loja -->
+  <div id="shopModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="shopTitle">
+    <div class="modal-content shop">
+      <div class="modal-header">
+        <h2 id="shopTitle">Loja de Upgrades</h2>
+        <button id="closeShop" class="icon-btn" aria-label="Fechar">✖</button>
+      </div>
+      <p class="muted">Gaste recursos para turbinar sua nave e sua expedição.</p>
+      <div id="shopList" class="shop-list"></div>
+    </div>
+  </div>
+
+  <!-- Modal de Níveis por Planeta -->
+  <div id="levelModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="levelTitle">
       <div class="modal-content">
         <div class="modal-header">
           <h2 id="levelTitle">Escolha o Nível</h2>
@@ -137,6 +139,32 @@
       </div>
     </div>
 
-    <script src="Index.js"></script>
-  </body>
-  </html>
+  <!-- Modal de seleção de nível -->
+  <!-- <div id="levelModal" class="modal">
+    <div class="modal-content">
+      <h2>Selecione a Dificuldade</h2>
+      <div class="level-options">
+        <div class="level-card easy" data-level="1">
+          <h3>Fácil</h3>
+          <p>Questões básicas para aquecer!</p>
+          <span>⭐</span>
+        </div>
+        <div class="level-card medium" data-level="2">
+          <h3>Médio</h3>
+          <p>Desafios intermediários.</p>
+          <span>⭐⭐</span>
+        </div>
+        <div class="level-card hard" data-level="3">
+          <h3>Difícil</h3>
+          <p>Somente para corajosos!</p>
+          <span>⭐⭐⭐</span>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+
+  <script src="Index.js"></script>
+</body>
+
+</html>
