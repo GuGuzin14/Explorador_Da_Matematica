@@ -21,8 +21,8 @@
         <div class="fuel-value" id="fuelValue">100 / 100</div>
       </div>
       <div class="status">
-        <span id="planetName">—</span>
-        <span id="progress">0/0</span>
+        <span id="planetName"></span>
+        <span id="progress"></span>
       </div>
       <div class="resources" id="resourcesHUD" aria-label="Recursos">
         <div class="res-pill" title="Água">
@@ -129,39 +129,29 @@
 
   <!-- Modal de Níveis por Planeta -->
   <div id="levelModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="levelTitle">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 id="levelTitle">Escolha o Nível</h2>
-          <button id="closeLevel" class="icon-btn" aria-label="Fechar">✖</button>
-        </div>
-        <p class="muted">Cada planeta possui 3 níveis. Conclua todos para desbloquear o próximo planeta.</p>
-        <div id="levelButtons" class="level-buttons"></div>
-      </div>
-    </div>
-
-  <!-- Modal de seleção de nível -->
-  <!-- <div id="levelModal" class="modal">
     <div class="modal-content">
-      <h2>Selecione a Dificuldade</h2>
-      <div class="level-options">
-        <div class="level-card easy" data-level="1">
-          <h3>Fácil</h3>
-          <p>Questões básicas para aquecer!</p>
-          <span>⭐</span>
-        </div>
-        <div class="level-card medium" data-level="2">
-          <h3>Médio</h3>
-          <p>Desafios intermediários.</p>
-          <span>⭐⭐</span>
-        </div>
-        <div class="level-card hard" data-level="3">
-          <h3>Difícil</h3>
-          <p>Somente para corajosos!</p>
-          <span>⭐⭐⭐</span>
-        </div>
+      <div class="modal-header">
+        <h2 id="levelTitle">Escolha o Nível</h2>
+        <button id="closeLevel" class="icon-btn" aria-label="Fechar">✖</button>
+      </div>
+      <p class="muted">Cada planeta possui 3 níveis. Conclua todos para desbloquear o próximo planeta.</p>
+      <div id="levelButtons" class="level-buttons"></div>
+    </div>
+  </div>
+
+  <div id="levelModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="levelTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="levelTitle">Escolha sua Missão</h2>
+        <button id="closeLevel" class="icon-btn" aria-label="Fechar">✖</button>
+      </div>
+      <p class="muted">Cada planeta possui 3 níveis com dificuldade progressiva. Complete todos para desbloquear o
+        próximo planeta.</p>
+      <div id="levelButtons" class="level-content">
+        <!-- Conteúdo gerado dinamicamente pelo JavaScript -->
       </div>
     </div>
-  </div> -->
+  </div>
 
 
   <script src="Index.js"></script>
