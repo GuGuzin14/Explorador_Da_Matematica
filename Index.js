@@ -7,7 +7,7 @@
 
 (function () {
 	'use strict';
-	
+
 	// Utilidades
 	const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 	const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -30,7 +30,7 @@
 		2: { add: [20, 101], subA: [40, 140], subB: [10, 120], mul: [3, 12], div: [3, 12], fuelLossMul: 1.1 },
 		3: { add: [50, 150], subA: [80, 220], subB: [30, 180], mul: [6, 14], div: [6, 14], fuelLossMul: 1.2 },
 	};
-	
+
 	const planets = {
 		terra: {
 			name: 'Terra',
@@ -83,7 +83,7 @@
 			},
 		},
 	};
-	
+
 	// Elementos
 	const $ = (sel) => document.querySelector(sel);
 	const bg = $('#bg');
@@ -99,11 +99,11 @@
 	const resAreiaEl = $('#resAreia');
 	const resAneisEl = $('#resAneis');
 	const resPoeiraEl = $('#resPoeira');
-	
+
 	const menuView = $('#menuView');
 	const gameView = $('#gameView');
 	const endView = $('#endView');
-	
+
 	const planetButtons = Array.from(document.querySelectorAll('.planet-btn'));
 	const levelModal = document.querySelector('#levelModal');
 	const levelButtons = document.querySelector('#levelButtons');
@@ -116,23 +116,23 @@
 	const giveUpBtn = $('#giveUp');
 	const pathFill = $('#pathFill');
 	const pathShip = $('#pathShip');
-	
+
 	const backToMenu = $('#backToMenu');
 	const retryPlanet = $('#retryPlanet');
 	const endTitle = $('#endTitle');
 	const endMessage = $('#endMessage');
-	
+
 	// CORREÇÃO: Carregar estado e configurar variáveis corretamente
 	const loaded = load();
-	const state = loaded || { 
-		unlocked: { terra: true, marte: false, saturno: false, andromeda: false }, 
-		resources: { agua: 0, areia: 0, aneis: 0, poeira: 0 }, 
-		upgrades: {}, 
+	const state = loaded || {
+		unlocked: { terra: true, marte: false, saturno: false, andromeda: false },
+		resources: { agua: 0, areia: 0, aneis: 0, poeira: 0 },
+		upgrades: {},
 		levels: { terra: [false, false, false], marte: [false, false, false], saturno: [false, false, false], andromeda: [false, false, false] },
 		// NOVO: persistir combustível
 		fuelData: { maxFuel: 100, currentFuel: 100 }
 	};
-	
+
 	// Migração e validação do estado
 	if (!state.unlocked) state.unlocked = { terra: true, marte: false, saturno: false, andromeda: false };
 	if (state.unlocked && state.unlocked.andromeda === undefined) state.unlocked.andromeda = false;
@@ -142,7 +142,7 @@
 	if (!state.levels) state.levels = { terra: [false, false, false], marte: [false, false, false], saturno: [false, false, false], andromeda: [false, false, false] };
 	// NOVO: migração de dados de combustível
 	if (!state.fuelData) state.fuelData = { maxFuel: 100, currentFuel: 100 };
-	
+
 	// CORREÇÃO: Função para salvar combustível
 	function saveFuelData() {
 		state.fuelData = {
@@ -151,7 +151,7 @@
 		};
 		save(state);
 	}
-	
+
 	// CORREÇÃO: Usar valores salvos para inicializar as variáveis
 	let initialFuel = state.fuelData.maxFuel || 100;
 	let fuel = state.fuelData.currentFuel || initialFuel;
@@ -177,12 +177,12 @@
 				const newMax = 100 + 20 * level;
 				const wasAtMax = fuel >= initialFuel; // Se estava no máximo
 				initialFuel = newMax;
-				
+
 				// Se estava no máximo, atualizar para novo máximo
 				if (wasAtMax || fuel > initialFuel) {
 					fuel = initialFuel;
 				}
-				
+
 				// NOVO: Salvar sempre que aplicar upgrade
 				saveFuelData();
 				updateFuelHUD();
@@ -253,9 +253,9 @@
 	};
 
 	function getUpgradeLevel(id) { return state.upgrades[id] || 0; }
-	function setUpgradeLevel(id, lvl) { 
-		state.upgrades[id] = lvl; 
-		save(state); 
+	function setUpgradeLevel(id, lvl) {
+		state.upgrades[id] = lvl;
+		save(state);
 	}
 	function computeCost(baseCost, scale, level) {
 		// custo do próximo nível (level atual -> comprar level+1)
@@ -374,19 +374,22 @@
 	function updateFuelHUD() {
 		fuel = clamp(fuel, 0, initialFuel);
 		const pct = Math.round((fuel / initialFuel) * 100);
-		
+	
 		if (fuelFill) {
 			fuelFill.style.width = pct + '%';
-			fuelFill.style.background = pct < 20
-				? `linear-gradient(90deg, #ff2f2f, #ff7777)`
-				: `linear-gradient(90deg, #ff9d0, #ffd166)`;
+			
+			// CORREÇÃO: Recalcular a cor baseada na porcentagem atual
+			if (pct < 20) {
+				fuelFill.style.background = `linear-gradient(90deg, #ff2f2f, #ff7777)`;
+			} else {
+				fuelFill.style.background = `linear-gradient(90deg, #ff9d00, #ffd166)`;
+			}
 		}
-		
+	
 		if (fuelValue) {
 			fuelValue.textContent = `${Math.round(fuel)} / ${initialFuel}`;
 		}
-		
-		// NOVO: Salvar combustível sempre que atualizar HUD
+	
 		saveFuelData();
 	}
 
@@ -455,6 +458,12 @@
 
 	function toMenu() {
 		stopFuelTimer();
+		
+		// NOVO: Reabastecer combustível ao voltar ao menu
+		fuel = initialFuel;
+		saveFuelData();
+		updateFuelHUD();
+		
 		show(menuView);
 		currentPlanetKey = null;
 		if (progressEl) progressEl.textContent = '';
@@ -603,7 +612,7 @@
 	}
 
 	// Função global para selecionar nível
-	window.selectLevel = function(planetKey, level) {
+	window.selectLevel = function (planetKey, level) {
 		if (levelModal) levelModal.setAttribute('aria-hidden', 'true');
 		startPlanet(planetKey, level);
 	}
@@ -626,6 +635,10 @@
 			andromeda: null
 		}[planetKey];
 
+		const progressPercentBar = progressPercent !== 100
+			? `width: ${progressPercent}%`
+			: '';
+
 		levelButtons.innerHTML = `
 		<!-- Informações do planeta -->
 		<div class="planet-info">
@@ -638,7 +651,7 @@
 
 		<!-- Trilha de níveis -->
 		<div class="track-line"></div>
-		<div class="track-progress" style="width: ${progressPercent}%;"></div>
+		<div class="track-progress" style="${progressPercentBar}"></div>
 		<div class="level-track">
 			
 			<div class="levels-container">
@@ -732,10 +745,17 @@
 	}
 
 	if (giveUpBtn) giveUpBtn.addEventListener('click', () => toMenu());
-	if (backToMenu) backToMenu.addEventListener('click', () => toMenu());
+	if (backToMenu) {
+		backToMenu.addEventListener('click', () => {
+			fuel = initialFuel;
+			saveFuelData();
+			updateFuelHUD();
+			toMenu();
+		});
+	}
 	if (retryPlanet) {
 		retryPlanet.addEventListener('click', () => {
-			if (currentPlanetKey) startPlanet(currentPlanetKey);
+			if (currentPlanetKey) startPlanet(currentPlanetKey, currentLevel);
 			else toMenu();
 		});
 	}
@@ -744,7 +764,7 @@
 	if (openShopBtn) openShopBtn.addEventListener('click', openShop);
 	if (closeShopBtn) closeShopBtn.addEventListener('click', closeShop);
 	if (shopModal) shopModal.addEventListener('click', (e) => { if (e.target === shopModal) closeShop(); });
-	
+
 	// Eventos modal de níveis
 	if (closeLevelBtn) closeLevelBtn.addEventListener('click', () => levelModal && levelModal.setAttribute('aria-hidden', 'true'));
 	if (levelModal) levelModal.addEventListener('click', (e) => { if (e.target === levelModal) levelModal.setAttribute('aria-hidden', 'true'); });
@@ -755,35 +775,61 @@
 		let W = 0, H = 0, dpr = Math.max(1, window.devicePixelRatio || 1);
 		const stars = [];
 		const STAR_COUNT = 180;
-		
+
 		// Planetas de fundo (posições relativas para escalar com a tela)
-		const planetsBg = [
-			// Azul (frio)
-			{
-				rx: 0.18, ry: 0.28, r: 60,
-				colors: ['#2a4b9e', '#0a1230'], glow: 'rgba(60,100,220,0.25)',
-				parallax: 0.12,
-				floatAmp: 8, floatSpeed: 0.00035, // bobbing
-				pulseAmp: 0.03, pulseSpeed: 0.00055, // pulsar de escala
-				moon: { ratio: 0.17, dist: 1.6, speed: 0.00025, color: '#9fb3ff' }
-			},
-			// Laranja (quente) com anéis
-			{
-				rx: 0.78, ry: 0.72, r: 80,
-				colors: ['#f39c12', '#5a2a08'],
-				ring: { color: '#ccb88a', width: 10, tilt: -0.45 },
-				glow: 'rgba(255,170,60,0.22)', parallax: 0.08,
-				floatAmp: 6, floatSpeed: 0.0003,
-				pulseAmp: 0.025, pulseSpeed: 0.0005
-			},
-			// Roxo (misterioso)
-			{
-				rx: 0.52, ry: 0.2, r: 46,
-				colors: ['#7b2cbf', '#200638'], glow: 'rgba(180,100,255,0.18)', parallax: 0.16,
-				floatAmp: 10, floatSpeed: 0.00042,
-				pulseAmp: 0.035, pulseSpeed: 0.0006
-			},
-		];
+		
+// Planetas de fundo mais realistas (substitui a configuração existente)
+
+// Configuração corrigida dos planetas de fundo
+const planetsBg = [
+	// Planeta azul estilo Terra (SEM as bolas pretas)
+	{
+		rx: 0.18, ry: 0.28, r: 60,
+		colors: ['#4a90e2', '#1e3a8a', '#0f172a'], 
+		glow: 'rgba(74, 144, 226, 0.3)',
+		parallax: 0.12,
+		floatAmp: 8, floatSpeed: 0.00035,
+		pulseAmp: 0.03, pulseSpeed: 0.00055,
+		// Atmosfera
+		atmosphere: { color: 'rgba(74, 144, 226, 0.15)', thickness: 1.2 },
+		// Lua realística
+		moon: { 
+			ratio: 0.17, 
+			dist: 1.6, 
+			speed: 0.00025, 
+			colors: ['#e5e7eb', '#9ca3af', '#6b7280'],
+			craters: false // Removido as crateras que causavam as bolas pretas
+		},
+		// REMOVIDO: surface (continentes) que causava as bolas pretas
+	},
+	// Planeta laranja estilo Saturno (SEM quadrado ao redor)
+	{
+		rx: 0.78, ry: 0.72, r: 80,
+		colors: ['#f59e0b', '#d97706', '#92400e', '#451a03'],
+		// Anéis corrigidos - sem múltiplos anéis que causavam o quadrado
+		ring: { 
+			color: '#e5e7eb', 
+			width: 8, 
+			tilt: -0.45,
+			opacity: 0.7
+		},
+		glow: 'rgba(245, 158, 11, 0.25)', 
+		parallax: 0.08,
+		floatAmp: 6, floatSpeed: 0.0003,
+		pulseAmp: 0.025, pulseSpeed: 0.0005,
+		atmosphere: { color: 'rgba(245, 158, 11, 0.1)', thickness: 1.15 }
+	},
+	// Planeta roxo misterioso (mantido)
+	{
+		rx: 0.52, ry: 0.2, r: 46,
+		colors: ['#a855f7', '#7c2d12', '#581c87', '#1e1b4b'], 
+		glow: 'rgba(168, 85, 247, 0.2)', 
+		parallax: 0.16,
+		floatAmp: 10, floatSpeed: 0.00042,
+		pulseAmp: 0.035, pulseSpeed: 0.0006,
+		atmosphere: { color: 'rgba(168, 85, 247, 0.12)', thickness: 1.1 }
+	}
+];
 
 		// Planeta com imagem (fundo) — com mesma flutuação e pulso
 		const imagePlanetCfg = {
@@ -825,22 +871,238 @@
 		function drawShip(t) {
 			const x = W * 0.75 + Math.sin(t * 0.0015) * 20;
 			const y = H * 0.4 + Math.cos(t * 0.0012) * 16;
+			const scale = 1 + Math.sin(t * 0.003) * 0.05; // Respiração sutil
+			
 			ctx.save();
 			ctx.translate(x, y);
 			ctx.rotate(-0.05 + Math.sin(t * 0.002) * 0.02);
-			// Corpo
-			ctx.fillStyle = '#9bbcff';
+			ctx.scale(scale, scale);
+			
+			// Sombra da nave
+			ctx.save();
+			ctx.translate(2, 2);
+			ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
 			ctx.beginPath();
-			ctx.moveTo(-14, 0); ctx.lineTo(10, -8); ctx.lineTo(10, 8); ctx.closePath();
+			ctx.moveTo(-16, 0);
+			ctx.lineTo(12, -10);
+			ctx.lineTo(12, 10);
+			ctx.closePath();
 			ctx.fill();
-			// Janela
-			ctx.fillStyle = '#14223f';
-			ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
-			// Exaustão
-			const flame = 8 + Math.sin(t * 0.02) * 4;
-			ctx.fillStyle = '#ffd166aa';
-			ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(-14 - flame, -3); ctx.lineTo(-14 - flame, 3); ctx.closePath(); ctx.fill();
 			ctx.restore();
+			
+			// Corpo principal da nave (gradiente mais realístico)
+			const bodyGrad = ctx.createLinearGradient(-16, -10, 12, 10);
+			bodyGrad.addColorStop(0, '#9bbcff');
+			bodyGrad.addColorStop(0.3, '#7c9cff');
+			bodyGrad.addColorStop(0.7, '#5a7cff');
+			bodyGrad.addColorStop(1, '#3b5ccc');
+			
+			ctx.fillStyle = bodyGrad;
+			ctx.beginPath();
+			ctx.moveTo(-16, 0);
+			ctx.quadraticCurveTo(-8, -12, 4, -10);
+			ctx.lineTo(12, -8);
+			ctx.lineTo(12, 8);
+			ctx.quadraticCurveTo(4, 10, -8, 12);
+			ctx.closePath();
+			ctx.fill();
+			
+			// Detalhes metálicos
+			ctx.strokeStyle = '#b8d4ff';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.moveTo(-12, -6);
+			ctx.lineTo(8, -6);
+			ctx.moveTo(-12, 6);
+			ctx.lineTo(8, 6);
+			ctx.stroke();
+			
+			// Janela da cabine com reflexo
+			const windowGrad = ctx.createRadialGradient(-2, -2, 1, 0, 0, 6);
+			windowGrad.addColorStop(0, '#64748b');
+			windowGrad.addColorStop(0.6, '#1e293b');
+			windowGrad.addColorStop(1, '#0f172a');
+			
+			ctx.fillStyle = windowGrad;
+			ctx.beginPath();
+			ctx.arc(0, 0, 6, 0, Math.PI * 2);
+			ctx.fill();
+			
+			// Reflexo na janela
+			ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+			ctx.beginPath();
+			ctx.arc(-2, -2, 2, 0, Math.PI * 2);
+			ctx.fill();
+			
+			// Asas laterais
+			ctx.fillStyle = '#6b7cff';
+			ctx.beginPath();
+			ctx.moveTo(-6, -8);
+			ctx.lineTo(-2, -16);
+			ctx.lineTo(2, -12);
+			ctx.lineTo(-2, -8);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.moveTo(-6, 8);
+			ctx.lineTo(-2, 16);
+			ctx.lineTo(2, 12);
+			ctx.lineTo(-2, 8);
+			ctx.closePath();
+			ctx.fill();
+			
+			// Propulsores múltiplos com chamas realísticas
+			const flame1 = 12 + Math.sin(t * 0.02) * 6;
+			const flame2 = 10 + Math.sin(t * 0.025 + 1) * 4;
+			const flame3 = 8 + Math.sin(t * 0.03 + 2) * 3;
+			
+			// Chama principal (azul-branca)
+			const flameGrad = ctx.createLinearGradient(-16, 0, -16 - flame1, 0);
+			flameGrad.addColorStop(0, '#fbbf24');
+			flameGrad.addColorStop(0.3, '#f59e0b');
+			flameGrad.addColorStop(0.7, '#3b82f6');
+			flameGrad.addColorStop(1, 'rgba(59, 130, 246, 0.3)');
+			
+			ctx.fillStyle = flameGrad;
+			ctx.beginPath();
+			ctx.moveTo(-16, 0);
+			ctx.lineTo(-16 - flame1, -4);
+			ctx.lineTo(-16 - flame1 * 0.8, 0);
+			ctx.lineTo(-16 - flame1, 4);
+			ctx.closePath();
+			ctx.fill();
+			
+			// Propulsores laterais menores
+			ctx.fillStyle = 'rgba(245, 158, 11, 0.8)';
+			ctx.beginPath();
+			ctx.moveTo(-8, -6);
+			ctx.lineTo(-8 - flame2, -8);
+			ctx.lineTo(-8 - flame2 * 0.7, -6);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.moveTo(-8, 6);
+			ctx.lineTo(-8 - flame3, 8);
+			ctx.lineTo(-8 - flame3 * 0.7, 6);
+			ctx.closePath();
+			ctx.fill();
+			
+			// Luzes de navegação piscando
+			const blinkRate = Math.sin(t * 0.008) > 0 ? 1 : 0.3;
+			ctx.fillStyle = `rgba(34, 197, 94, ${blinkRate})`;
+			ctx.beginPath();
+			ctx.arc(8, -6, 1.5, 0, Math.PI * 2);
+			ctx.fill();
+			
+			ctx.fillStyle = `rgba(239, 68, 68, ${1 - blinkRate + 0.3})`;
+			ctx.beginPath();
+			ctx.arc(8, 6, 1.5, 0, Math.PI * 2);
+			ctx.fill();
+			
+			ctx.restore();
+		}
+
+		function drawDetailedPlanet(p, x, y, r, t, index) {
+			// Atmosfera
+			if (p.atmosphere) {
+				const atmosGrad = ctx.createRadialGradient(x, y, r * 0.9, x, y, r * p.atmosphere.thickness);
+				atmosGrad.addColorStop(0, 'rgba(0,0,0,0)');
+				atmosGrad.addColorStop(0.8, p.atmosphere.color);
+				atmosGrad.addColorStop(1, 'rgba(0,0,0,0)');
+				ctx.fillStyle = atmosGrad;
+				ctx.beginPath();
+				ctx.arc(x, y, r * p.atmosphere.thickness, 0, Math.PI * 2);
+				ctx.fill();
+			}
+		
+			// Halo suave
+			if (p.glow) {
+				const g = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 1.5);
+				g.addColorStop(0, p.glow);
+				g.addColorStop(1, 'rgba(0,0,0,0)');
+				ctx.fillStyle = g;
+				ctx.beginPath();
+				ctx.arc(x, y, r * 1.5, 0, Math.PI * 2);
+				ctx.fill();
+			}
+		
+			// Corpo do planeta com gradiente suave
+			const ox = Math.cos(t * 0.0004 + index) * r * 0.05;
+			const oy = Math.sin(t * 0.0004 + index * 0.7) * r * 0.05;
+			
+			const grad = ctx.createRadialGradient(x - r * 0.3 + ox, y - r * 0.3 + oy, r * 0.1, x, y, r);
+			for (let i = 0; i < p.colors.length; i++) {
+				grad.addColorStop(i / (p.colors.length - 1), p.colors[i]);
+			}
+			ctx.fillStyle = grad;
+			ctx.beginPath();
+			ctx.arc(x, y, r, 0, Math.PI * 2);
+			ctx.fill();
+		
+			// Iluminação suave (terminador)
+			ctx.save();
+			ctx.globalCompositeOperation = 'source-atop';
+			const phi = t * 0.0002 + index * 0.7;
+			const dx = Math.cos(phi) * r;
+			const dy = Math.sin(phi) * r;
+			const light = ctx.createLinearGradient(x - dx, y - dy, x + dx, y + dy);
+			light.addColorStop(0, 'rgba(255,255,255,0.12)');
+			light.addColorStop(0.5, 'rgba(255,255,255,0.03)');
+			light.addColorStop(0.7, 'rgba(0,0,0,0)');
+			light.addColorStop(1, 'rgba(0,0,0,0.2)');
+			ctx.fillStyle = light;
+			ctx.fillRect(x - r, y - r, r * 2, r * 2);
+			ctx.restore();
+		
+			// Anel único e limpo (apenas para Saturno)
+			if (p.ring) {
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.rotate(p.ring.tilt + Math.sin(t * 0.00022 + index) * 0.03);
+				ctx.globalAlpha = p.ring.opacity || 0.7;
+				ctx.strokeStyle = p.ring.color;
+				ctx.lineWidth = p.ring.width + Math.sin(t * 0.001 + index) * 0.5;
+				
+				// Desenhar anel com bordas suaves
+				ctx.beginPath();
+				ctx.ellipse(0, 0, r * 1.4, r * 0.4, 0, 0, Math.PI * 2);
+				ctx.stroke();
+				
+				// Anel interno mais sutil
+				ctx.globalAlpha = (p.ring.opacity || 0.7) * 0.5;
+				ctx.lineWidth = (p.ring.width + Math.sin(t * 0.001 + index) * 0.5) * 0.6;
+				ctx.beginPath();
+				ctx.ellipse(0, 0, r * 1.6, r * 0.45, 0, 0, Math.PI * 2);
+				ctx.stroke();
+				
+				ctx.restore();
+			}
+		
+			// Lua limpa (sem crateras problemáticas)
+			if (p.moon) {
+				const ang = t * (p.moon.speed || 0.0002) + index * 0.8;
+				const md = r * (p.moon.dist || 1.6);
+				const mx = x + Math.cos(ang) * md;
+				const my = y + Math.sin(ang) * md;
+				const mr = Math.max(3, r * (p.moon.ratio || 0.16));
+				
+				// Corpo da lua com gradiente suave
+				const mg = ctx.createRadialGradient(mx - mr * 0.3, my - mr * 0.3, mr * 0.2, mx, my, mr);
+				if (p.moon.colors) {
+					for (let i = 0; i < p.moon.colors.length; i++) {
+						mg.addColorStop(i / (p.moon.colors.length - 1), p.moon.colors[i]);
+					}
+				}
+				
+				ctx.fillStyle = mg;
+				ctx.globalAlpha = 0.85;
+				ctx.beginPath();
+				ctx.arc(mx, my, mr, 0, Math.PI * 2);
+				ctx.fill();
+				ctx.globalAlpha = 1;
+			}
 		}
 
 		function animateBg(t) {
@@ -855,68 +1117,8 @@
 				const x = p.rx * W + driftX + bobX;
 				const y = p.ry * H + driftY + bobY;
 				const r = p.r * (1 + (p.pulseAmp || 0) * Math.sin(t * (p.pulseSpeed || 0.0005) + i * 1.3));
-
-				// Halo suave
-				if (p.glow) {
-					const g = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 1.5);
-					g.addColorStop(0, p.glow);
-					g.addColorStop(1, 'rgba(0,0,0,0)');
-					ctx.fillStyle = g;
-					ctx.beginPath(); ctx.arc(x, y, r * 1.5, 0, Math.PI * 2); ctx.fill();
-				}
-
-				// Corpo do planeta
-				const ox = Math.cos(t * 0.0004 + i) * r * 0.05;
-				const oy = Math.sin(t * 0.0004 + i * 0.7) * r * 0.05;
-				const grad = ctx.createRadialGradient(x - r * 0.28 + ox, y - r * 0.28 + oy, r * 0.2, x, y, r);
-				grad.addColorStop(0, p.colors[0]);
-				grad.addColorStop(1, p.colors[1]);
-				ctx.fillStyle = grad;
-				ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-
-				// Iluminação (terminador)
-				ctx.save();
-				ctx.globalCompositeOperation = 'source-atop';
-				const phi = t * 0.0002 + i * 0.7;
-				const dx = Math.cos(phi) * r;
-				const dy = Math.sin(phi) * r;
-				const light = ctx.createLinearGradient(x - dx, y - dy, x + dx, y + dy);
-				light.addColorStop(0, 'rgba(255,255,255,0.10)');
-				light.addColorStop(0.5, 'rgba(0,0,0,0)');
-				light.addColorStop(1, 'rgba(0,0,0,0.18)');
-				ctx.fillStyle = light;
-				ctx.fillRect(x - r, y - r, r * 2, r * 2);
-				ctx.restore();
-
-				// Anéis (opcional)
-				if (p.ring) {
-					ctx.save();
-					ctx.translate(x, y);
-					ctx.rotate(p.ring.tilt + Math.sin(t * 0.00022 + i) * 0.06);
-					ctx.strokeStyle = p.ring.color;
-					ctx.globalAlpha = 0.85;
-					ctx.lineWidth = p.ring.width + Math.sin(t * 0.001 + i) * 0.6;
-					ctx.beginPath();
-					ctx.ellipse(0, 0, r * 1.4, r * 0.55, 0, 0, Math.PI * 2);
-					ctx.stroke();
-					ctx.restore();
-				}
-
-				// Lua (opcional)
-				if (p.moon) {
-					const ang = t * (p.moon.speed || 0.0002) + i * 0.8;
-					const md = r * (p.moon.dist || 1.6);
-					const mx = x + Math.cos(ang) * md;
-					const my = y + Math.sin(ang) * md;
-					const mr = Math.max(2, r * (p.moon.ratio || 0.16));
-					const mg = ctx.createRadialGradient(mx - mr * 0.2, my - mr * 0.2, mr * 0.2, mx, my, mr);
-					mg.addColorStop(0, p.moon.color || '#cfd8ff');
-					mg.addColorStop(1, '#222848');
-					ctx.fillStyle = mg;
-					ctx.globalAlpha = 0.95;
-					ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
-					ctx.globalAlpha = 1;
-				}
+			
+				drawDetailedPlanet(p, x, y, r, t, i);
 			}
 
 			// Planeta de imagem (fundo), com a mesma animação de flutuação
@@ -953,7 +1155,7 @@
 				ctx.fillStyle = `rgba(255,255,255,${0.4 + s.z * 0.6})`;
 				ctx.fillRect(s.x, s.y, s.s, s.s);
 			}
-			
+
 			// Nebulosidade suave
 			const g = ctx.createRadialGradient(W * 0.2, H * 0.8, 20, W * 0.2, H * 0.8, 260);
 			g.addColorStop(0, 'rgba(60, 90, 180, 0.08)');
@@ -969,7 +1171,7 @@
 
 	// CORREÇÃO: Salvar estado inicial e aplicar upgrades
 	save(state);
-	
+
 	// Inicialização
 	refreshMenuLocks();
 	applyAllUpgrades();
