@@ -46,6 +46,7 @@
           <span class="res-num" id="resPoeira">0</span>
         </div>
         <button id="openShop" class="btn-shop" title="Abrir Loja">🛒 Loja</button>
+        <button id="toggleTTS" class="btn-tts" aria-pressed="false" aria-label="Ativar leitor por voz do jogo" title="Leitor por voz do jogo (beta)">🔊 Voz: desligada</button>
       </div>
     </header>
 
@@ -54,22 +55,22 @@
         <h1>Explorador da Matemática</h1>
         <p>Escolha um planeta para começar:</p>
         <div class="planets">
-          <button class="planet-btn" data-planet="terra">
+          <button class="planet-btn" data-planet="terra" data-speak="Planeta Terra. Operação: adição. Pressione Enter para abrir níveis.">
             🌎 Terra
             <small>Adição</small>
             <span class="lock" aria-hidden="true"></span>
           </button>
-          <button class="planet-btn" data-planet="marte">
+          <button class="planet-btn" data-planet="marte" data-speak="Planeta Marte. Operação: subtração. Pressione Enter para abrir níveis.">
             🔴 Marte
             <small>Subtração</small>
             <span class="lock" aria-hidden="true">🔒</span>
           </button>
-          <button class="planet-btn" data-planet="saturno">
+          <button class="planet-btn" data-planet="saturno" data-speak="Planeta Saturno. Operação: multiplicação. Pressione Enter para abrir níveis.">
             🪐 Saturno
             <small>Multiplicação</small>
             <span class="lock" aria-hidden="true">🔒</span>
           </button>
-          <button class="planet-btn" data-planet="andromeda">
+          <button class="planet-btn" data-planet="andromeda" data-speak="Galáxia Andrômeda. Operação: divisão. Pressione Enter para abrir níveis.">
             🌌 Andrômeda
             <small>Divisão</small>
             <span class="lock" aria-hidden="true">🔒</span>
@@ -95,10 +96,10 @@
           <div class="question" id="questionText">—</div>
           <form id="answerForm">
             <input type="number" id="answerInput" placeholder="Sua resposta" autocomplete="off" inputmode="numeric" />
-            <button type="submit" id="submitAnswer">Responder</button>
+            <button type="submit" id="submitAnswer" aria-label="Enviar resposta">Responder</button>
           </form>
           <div class="feedback" id="feedback"></div>
-          <button id="giveUp" class="link">Desistir e voltar ao menu</button>
+          <button id="giveUp" class="link" aria-label="Desistir e voltar ao menu">Desistir e voltar ao menu</button>
         </div>
       </section>
 
@@ -116,7 +117,7 @@
   </div>
 
   <!-- Modal da Loja -->
-  <div id="shopModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="shopTitle">
+  <div id="shopModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="shopTitle" aria-modal="true">
     <div class="modal-content shop">
       <div class="modal-header">
         <h2 id="shopTitle">Loja de Upgrades</h2>
@@ -128,7 +129,7 @@
   </div>
 
   <!-- Modal de Níveis por Planeta -->
-  <div id="levelModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="levelTitle">
+  <div id="levelModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="levelTitle" aria-modal="true">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="levelTitle">Escolha o Nível</h2>
@@ -138,6 +139,9 @@
       <div id="levelButtons" class="level-buttons"></div>
     </div>
   </div>
+
+  <!-- Região discreta para leitores de tela e mensagens cortas -->
+  <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
 
 

@@ -136,3 +136,25 @@ Notas
 -----
 - O progresso de desbloqueio é salvo em `localStorage`.
 - Para resetar o progresso, use o console do navegador: `localStorage.removeItem('exploradorMath')`.
+
+Leitor por voz (Acessibilidade)
+-------------------------------
+Este jogo oferece um leitor por voz interno (beta) para apoiar jogadores com deficiência visual.
+
+Como ativar:
+- No HUD, clique no botão "🔊 Voz: desligada" para alternar para "Voz: ligada".
+- Ele usa a Web Speech API do navegador e, no Windows, costuma acessar as vozes instaladas do sistema (por exemplo, Microsoft Maria/Letícia pt-BR).
+
+O que é narrado:
+- Botões do menu ao navegar com o teclado (Tab) ou clicar.
+- A pergunta de matemática atual e o número da questão.
+- Feedback de respostas corretas/incorretas, abertura/fechamento da loja e seleção de níveis.
+
+Compatibilidade:
+- Requer um navegador com suporte à Web Speech API (Chrome/Edge recomendados no Windows).
+- O áudio só inicia após um gesto do usuário (clique no botão de voz). Isso é uma exigência dos navegadores.
+- Se você usa um leitor de tela do sistema (NVDA, JAWS, Narrator), pode optar por manter o leitor interno desligado para evitar sobreposição de falas.
+
+Dicas:
+- Pressione Tab para navegar entre elementos e Enter para ativar.
+- O jogo também possui uma região aria-live discreta para cooperar com leitores de tela.

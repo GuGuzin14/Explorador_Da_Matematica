@@ -151,6 +151,20 @@
     filter: brightness(1.1);
   }
 
+  /* Botão TTS (leitor por voz do jogo) */
+  .btn-tts {
+    margin-left: 8px;
+    background: #1f2a4a;
+    border-color: #2b3a6d;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+  }
+  .btn-tts[aria-pressed="true"] {
+    background: #234;
+    outline: 2px solid #19c37d55;
+  }
+
   /* Menu */
   #menuView {
     width: 700px;
@@ -213,6 +227,19 @@
   .legend {
     color: var(--muted);
     margin-top: 8px;
+  }
+
+  /* Região apenas para leitores de tela */
+  .sr-only {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap; /* impedir quebra */
+    border: 0;
   }
 
   /* Game */

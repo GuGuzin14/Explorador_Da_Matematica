@@ -13,97 +13,160 @@
 	const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 	const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 
-	// CORREÇÃO: Definir funções de persistência ANTES de usar
-	const save = (data) => localStorage.setItem('exploradorMath', JSON.stringify(data));
-	const load = () => {
+	// Helper DOM simples
+	const $ = (sel, root = document) => root.querySelector(sel);
+
+	// Carregar estado do localStorage
+	function load() {
 		try {
 			const raw = localStorage.getItem('exploradorMath');
 			return raw ? JSON.parse(raw) : null;
-		} catch {
-			return null;
-		}
-	};
+		} catch { return null; }
+	}
 
-	// Estado
-	const levelConfigs = {
-		1: { add: [1, 50], subA: [20, 99], subB: [1, 50], mul: [2, 9], div: [2, 9], fuelLossMul: 1.0 },
-		2: { add: [20, 101], subA: [40, 140], subB: [10, 120], mul: [3, 12], div: [3, 12], fuelLossMul: 1.1 },
-		3: { add: [50, 150], subA: [80, 220], subB: [30, 180], mul: [6, 14], div: [6, 14], fuelLossMul: 1.2 },
-	};
-
-	const planets = {
-		terra: {
-			name: 'Terra',
-			icon: '🌎',
-			op: ['+'],
-			questionCount: 8,
-			gen(level = 1) {
-				const cfg = levelConfigs[level] || levelConfigs[1];
-				const a = randInt(cfg.add[0], cfg.add[1]);
-				const b = randInt(cfg.add[0], cfg.add[1]);
-				return { text: `${a} + ${b} = ?`, answer: a + b };
-			},
-		},
-		marte: {
-			name: 'Marte',
-			icon: '🔴',
-			op: ['-'],
-			questionCount: 8,
-			gen(level = 1) {
-				const cfg = levelConfigs[level] || levelConfigs[1];
-				let a = randInt(cfg.subA[0], cfg.subA[1]);
-				let b = randInt(cfg.subB[0], cfg.subB[1]);
-				if (b > a) [a, b] = [b, a];
-				return { text: `${a} - ${b} = ?`, answer: a - b };
-			},
-		},
-		saturno: {
-			name: 'Saturno',
-			icon: '🪐',
-			op: ['×'],
-			questionCount: 8,
-			gen(level = 1) {
-				const cfg = levelConfigs[level] || levelConfigs[1];
-				const a = randInt(cfg.mul[0], cfg.mul[1]);
-				const b = randInt(cfg.mul[0], cfg.mul[1]);
-				return { text: `${a} × ${b} = ?`, answer: a * b };
-			},
-		},
-		andromeda: {
-			name: 'Andrômeda',
-			icon: '🌌',
-			op: ['÷'],
-			questionCount: 8,
-			gen(level = 1) {
-				const cfg = levelConfigs[level] || levelConfigs[1];
-				const b = randInt(cfg.div[0], cfg.div[1]);
-				const q = randInt(cfg.div[0], cfg.div[1]);
-				const a = b * q; // a ÷ b = q
-				return { text: `${a} ÷ ${b} = ?`, answer: q };
-			},
-		},
-	};
-
-	// Elementos
-	const $ = (sel) => document.querySelector(sel);
-	const bg = $('#bg');
-	const fuelFill = $('#fuelFill');
-	const fuelValue = $('#fuelValue');
+	// Seletores comuns do DOM
+	const menuView = $('#menuView');
+	const gameView = $('#gameView');
+	const endView = $('#endView');
 	const planetName = $('#planetName');
 	const progressEl = $('#progress');
-	const openShopBtn = $('#openShop');
-	const shopModal = $('#shopModal');
-	const closeShopBtn = $('#closeShop');
-	const shopList = $('#shopList');
 	const resAguaEl = $('#resAgua');
 	const resAreiaEl = $('#resAreia');
 	const resAneisEl = $('#resAneis');
 	const resPoeiraEl = $('#resPoeira');
+	const resourcePills = Array.from(document.querySelectorAll('.res-pill'));
+	const fuelFill = $('#fuelFill');
+	const fuelValue = $('#fuelValue');
+	const openShopBtn = $('#openShop');
+	const closeShopBtn = $('#closeShop');
+	const shopModal = $('#shopModal');
+	const shopList = $('#shopList');
+	const bg = $('#bg');
 
-	const menuView = $('#menuView');
-	const gameView = $('#gameView');
-	const endView = $('#endView');
+	// Configs de níveis
+	const levelConfigs = {
+		1: { fuelLossMul: 1.0 },
+		2: { fuelLossMul: 1.2 },
+		3: { fuelLossMul: 1.5 },
+	};
 
+	// Definição dos planetas e geradores de perguntas
+	const planets = {
+		terra: {
+			icon: '🌎', name: 'Terra', questionCount: 8,
+			gen(level) {
+				const a = randInt(1, 20 + level * 10);
+				const b = randInt(1, 20 + level * 10);
+				return { text: `${a} + ${b} = ?`, answer: a + b };
+			}
+		},
+		marte: {
+			icon: '🔴', name: 'Marte', questionCount: 9,
+			gen(level) {
+				const a = randInt(5, 40 + level * 12);
+				const b = randInt(1, Math.min(a, 20 + level * 8));
+				return { text: `${a} - ${b} = ?`, answer: a - b };
+			}
+		},
+		saturno: {
+			icon: '🪐', name: 'Saturno', questionCount: 10,
+			gen(level) {
+				const a = randInt(2, 9 + level * 3);
+				const b = randInt(2, 9 + level * 3);
+				return { text: `${a} × ${b} = ?`, answer: a * b };
+			}
+		},
+		andromeda: {
+			icon: '🌌', name: 'Andrômeda', questionCount: 10,
+			gen(level) {
+				const b = randInt(2, 9 + level * 2);
+				const ans = randInt(2, 12 + level * 3);
+				const a = b * ans;
+				return { text: `${a} ÷ ${b} = ?`, answer: ans };
+			}
+		},
+	};
+
+	// CORREÇÃO: Definir funções de persistência ANTES de usar
+	const save = (data) => localStorage.setItem('exploradorMath', JSON.stringify(data));
+	function renderLevelModal(planetKey) {
+		if (!levelModal || !levelButtons) return;
+
+		const planet = planets[planetKey];
+		const planetInfo = getPlanetInfo(planetKey);
+		const levels = state.levels[planetKey] || [false, false, false];
+		const progressPercent = calculateTrackProgress(levels);
+		const completedCount = levels.filter(Boolean).length;
+
+		const nextPlanet = {
+			terra: 'Marte',
+			marte: 'Saturno',
+			saturno: 'Andrômeda',
+			andromeda: null
+		}[planetKey];
+
+		const progressPercentBar = progressPercent !== 100 ? `width: ${progressPercent}%` : '';
+
+		levelButtons.innerHTML = `
+			<div class="planet-info">
+				<div class="planet-icon">${planet.icon}</div>
+				<div class="planet-details">
+					<h3>${planetInfo.name}</h3>
+					<p>${planetInfo.desc}</p>
+				</div>
+			</div>
+
+			<div class="track-line"></div>
+			<div class="track-progress" style="${progressPercentBar}"></div>
+			<div class="level-track">
+				<div class="levels-container">
+					${planetInfo.levels.map((levelInfo, index) => {
+						const levelNum = index + 1;
+						const isCompleted = levels[index];
+						const isAvailable = index === 0 || levels[index - 1];
+						let stateClass = 'locked';
+						if (isCompleted) stateClass = 'completed';
+						else if (isAvailable) stateClass = 'available';
+						return `
+							<div class="level-station ${stateClass}" ${isAvailable ? `onclick=\"selectLevel('${planetKey}', ${levelNum})\"` : ''} role="button" tabindex="${isAvailable ? 0 : -1}" aria-label="${isAvailable ? `Abrir nível ${levelNum}: ${levelInfo.title}` : `Nível ${levelNum} bloqueado`}" data-level="${levelNum}" ${isAvailable ? `data-speak=\"Nível ${levelNum}: ${levelInfo.title}. ${levelInfo.desc}. Pressione Enter para iniciar.\"` : ''}>
+								<div class="station-node">
+									<span class="level-number">${levelNum}</span>
+								</div>
+								<div class="station-info">
+									<div class="level-title">${levelInfo.title}</div>
+									<div class="level-description">${levelInfo.desc}</div>
+									<div class="difficulty-stars">${generateStars(levelNum)}</div>
+								</div>
+							</div>
+						`;
+					}).join('')}
+				</div>
+			</div>
+
+			<div class="completion-info">
+				<span class="progress-text">Progresso: ${completedCount}/3 níveis concluídos</span><br>
+				${nextPlanet ? `Complete pelo menos 1 nível para desbloquear ${nextPlanet}!` : 'Parabéns! Você conquistou toda a galáxia!'}
+			</div>
+		`;
+
+		// Teclado e fala
+		const stations = Array.from(levelButtons.querySelectorAll('.level-station'));
+		stations.forEach((el) => {
+			if (el.classList.contains('locked')) return;
+			el.addEventListener('keydown', (e) => {
+				const key = e.key;
+				if (key === 'Enter' || key === ' ') {
+					e.preventDefault();
+					const lvl = Number(el.getAttribute('data-level')) || 1;
+					window.selectLevel(planetKey, lvl);
+				}
+			});
+			el.addEventListener('focus', () => {
+				const msg = el.getAttribute('data-speak') || el.getAttribute('aria-label') || 'Nível';
+				speak(msg, { interrupt: true, rate: 1.0 });
+			});
+		});
+	}
 	const planetButtons = Array.from(document.querySelectorAll('.planet-btn'));
 	const levelModal = document.querySelector('#levelModal');
 	const levelButtons = document.querySelector('#levelButtons');
@@ -121,6 +184,75 @@
 	const retryPlanet = $('#retryPlanet');
 	const endTitle = $('#endTitle');
 	const endMessage = $('#endMessage');
+
+	// ===== Acessibilidade: TTS (Web Speech API) =====
+	const toggleTTSBtn = document.getElementById('toggleTTS');
+	const liveRegion = document.getElementById('liveRegion');
+
+	let ttsEnabled = false;
+	let voices = [];
+	let selectedVoice = null; // Preferir Português Brasil
+
+	function loadVoices() {
+		try {
+			voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+			selectedVoice = voices.find(v => /pt-?BR/i.test(v.lang))
+				|| voices.find(v => /pt/i.test(v.lang))
+				|| voices[0]
+				|| null;
+		} catch { /* ignore */ }
+	}
+
+	if (window.speechSynthesis) {
+		loadVoices();
+		if (typeof speechSynthesis.onvoiceschanged !== 'undefined') {
+			speechSynthesis.onvoiceschanged = loadVoices;
+		}
+	}
+
+	function speak(text, opts = {}) {
+		if (!ttsEnabled || !window.speechSynthesis || !text) return; 
+		// Remover emojis/símbolos do texto falado para evitar narrativas longas desnecessárias
+		const sanitized = String(text).replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').replace(/[\u2190-\u21FF]/g, '').trim();
+		if (!sanitized) return;
+		if (opts.interrupt) {
+			try { speechSynthesis.cancel(); } catch { }
+		}
+		const u = new SpeechSynthesisUtterance(sanitized);
+		u.lang = (selectedVoice && selectedVoice.lang) || 'pt-BR';
+		if (selectedVoice) u.voice = selectedVoice;
+		u.rate = opts.rate ?? 1.0;
+		u.pitch = opts.pitch ?? 1.0;
+		u.volume = opts.volume ?? 1.0;
+		try { speechSynthesis.speak(u); } catch { }
+	}
+
+	function announce(text) {
+		if (liveRegion) {
+			liveRegion.textContent = '';
+			setTimeout(() => { liveRegion.textContent = text; }, 10);
+		}
+		speak(text, { interrupt: true, rate: 1.0 });
+	}
+
+	function updateTTSToggleUI() {
+		if (!toggleTTSBtn) return;
+		toggleTTSBtn.setAttribute('aria-pressed', String(ttsEnabled));
+		toggleTTSBtn.textContent = ttsEnabled ? '🔊 Voz: ligada' : '🔇 Voz: desligada';
+		toggleTTSBtn.title = 'Leitor por voz do jogo (beta)';
+	}
+
+	if (toggleTTSBtn) {
+		toggleTTSBtn.addEventListener('click', () => {
+			if (!window.speechSynthesis) {
+				alert('Este navegador não suporta leitura por voz (Web Speech API).');
+				return;
+			}
+			ttsEnabled = !ttsEnabled;
+			updateTTSToggleUI();
+			if (ttsEnabled) announce('Leitor por voz do jogo ativado. Use Tab para navegar e Enter para selecionar.');
+		});
+	}
 
 	// CORREÇÃO: Carregar estado e configurar variáveis corretamente
 	const loaded = load();
@@ -292,6 +424,7 @@
 			const lvl = getUpgradeLevel(id);
 			const card = document.createElement('div');
 			card.className = 'upgrade-card';
+			card.setAttribute('tabindex', '0');
 			const title = document.createElement('div');
 			title.className = 'upgrade-title';
 			title.textContent = `${def.icon} ${def.name}`;
@@ -317,24 +450,72 @@
 					pill.textContent = `${label} ${cost[k]}`;
 					costsWrap.appendChild(pill);
 				}
-				const btn = document.createElement('button');
-				btn.className = 'btn-buy';
-				btn.textContent = 'Comprar';
-				btn.disabled = !hasResources(cost);
-				btn.addEventListener('click', () => {
-					if (!hasResources(cost)) return;
+
+				// Ação centralizada de compra
+				const doBuy = () => {
+					if (!hasResources(cost)) {
+						speak('Indisponível, recursos insuficientes.', { interrupt: true });
+						return;
+					}
 					spendResources(cost);
 					setUpgradeLevel(id, lvl + 1);
 					upgradesDef[id].apply(lvl + 1);
 					renderShop();
+					// Falar confirmação após re-render para evitar interrupções de foco
+					setTimeout(() => announce(`${def.name} comprado. Nível ${lvl + 1} de ${def.maxLevel} aplicado.`), 30);
+				};
+				// Texto de custo sem emojis para o TTS
+				const costNames = { agua: 'água', areia: 'areia', aneis: 'anéis', poeira: 'poeira' };
+				const costPlain = Object.keys(cost).map((k) => `${cost[k]} ${costNames[k] || k}`).join(', ');
+				const btn = document.createElement('button');
+				btn.className = 'btn-buy';
+				btn.textContent = 'Comprar';
+				btn.type = 'button';
+				btn.disabled = !hasResources(cost);
+				btn.setAttribute('aria-label', `Comprar ${def.name}. Nível atual ${lvl} de ${def.maxLevel}.`);
+				btn.addEventListener('click', doBuy);
+				btn.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						doBuy();
+					}
+				});
+				// Falar ao focar o botão de compra
+				btn.addEventListener('focus', () => {
+					const status = btn.disabled ? 'indisponível, recursos insuficientes' : 'disponível para compra';
+					speak(`Comprar ${def.name}. ${status}. Custo: ${costPlain}.`, { interrupt: true });
 				});
 				actions.appendChild(costsWrap);
 				actions.appendChild(btn);
+
+				// Falar ao focar o card da melhoria
+				card.addEventListener('focus', () => {
+					const available = hasResources(cost);
+					const availabilityText = available ? 'disponível para compra' : 'recursos insuficientes';
+					const msg = `${def.name}. ${def.desc}. Nível ${lvl} de ${def.maxLevel}. ${availabilityText}. Custo: ${costPlain}.`;
+					speak(msg, { interrupt: true });
+				});
+				// Enter/Espaço no card leva ao botão de compra
+				card.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						if (!btn.disabled) {
+							doBuy();
+						} else {
+							btn.focus();
+							speak(`Comprar ${def.name}. Indisponível, recursos insuficientes. Custo: ${costPlain}.`, { interrupt: true });
+						}
+					}
+				});
 			} else {
 				const done = document.createElement('span');
 				done.className = 'muted';
 				done.textContent = 'Máximo alcançado';
 				actions.appendChild(done);
+				// Falar ao focar card no máximo
+				card.addEventListener('focus', () => {
+					speak(`${def.name}. ${def.desc}. Nível ${lvl} de ${def.maxLevel}. Máximo alcançado.`, { interrupt: true });
+				});
 			}
 
 			card.appendChild(title);
@@ -350,8 +531,9 @@
 		if (!shopModal) return;
 		shopModal.setAttribute('aria-hidden', 'false');
 		renderShop();
+		trapFocus(shopModal);
 	}
-	function closeShop() { if (shopModal) shopModal.setAttribute('aria-hidden', 'true'); }
+	function closeShop() { if (shopModal) { shopModal.setAttribute('aria-hidden', 'true'); releaseFocus(shopModal); } }
 
 	// Jogo em andamento
 	let currentPlanetKey = null;
@@ -402,6 +584,43 @@
 		if (resAreiaEl) resAreiaEl.textContent = String(state.resources.areia);
 		if (resAneisEl) resAneisEl.textContent = String(state.resources.aneis);
 		if (resPoeiraEl) resPoeiraEl.textContent = String(state.resources.poeira);
+
+		updateResourceAria();
+
+		if (planet) {
+			announce(`Planeta: ${planet.name}. Progresso ${currentQuestionIndex} de ${totalQuestions}. Combustível ${Math.round(fuel)} de ${initialFuel}.`);
+		}
+	}
+
+	// Acessibilidade: tornar os recursos focáveis e com rótulo dinâmico
+	function updateResourceAria() {
+		try {
+			resourcePills.forEach((pill) => {
+				const num = pill.querySelector('.res-num');
+				if (!num) return;
+				const id = num.id || '';
+				let key = null;
+				let name = '';
+				if (id === 'resAgua') { key = 'agua'; name = 'Água'; }
+				if (id === 'resAreia') { key = 'areia'; name = 'Areia'; }
+				if (id === 'resAneis') { key = 'aneis'; name = 'Anéis'; }
+				if (id === 'resPoeira') { key = 'poeira'; name = 'Poeira'; }
+				if (!key) return;
+				const val = state.resources[key] ?? 0;
+				pill.setAttribute('aria-label', `${name}: ${val}`);
+			});
+		} catch {}
+	}
+
+	function initResourcePills() {
+		resourcePills.forEach((pill) => {
+			pill.tabIndex = 0;
+			pill.addEventListener('focus', () => {
+				const label = pill.getAttribute('aria-label') || pill.textContent.trim();
+				speak(label, { interrupt: true });
+			});
+		});
+		updateResourceAria();
 	}
 
 	// Timer de combustível
@@ -470,6 +689,7 @@
 		if (feedback) feedback.textContent = '';
 		refreshMenuLocks();
 		updateProgressHUD();
+		announce('Menu principal. Selecione um planeta para começar.');
 	}
 
 	// Perguntas
@@ -510,6 +730,12 @@
 			const doneCount = (state.levels[currentPlanetKey] || []).filter(Boolean).length;
 			const unlockMsg = doneCount >= 3 ? 'Planeta seguinte desbloqueado.' : `Progresso: ${doneCount}/3 níveis concluídos.`;
 			if (endMessage) endMessage.textContent = `${planet.icon} ${planet.name} Nível ${currentLevel} concluído! +${reward} ${resName}. ${unlockMsg}${jackpotHit ? ' Bônus estelar x2!' : ''}`;
+			// Anunciar opções ao finalizar
+			{
+				const titleText = endTitle ? endTitle.textContent : '';
+				const msgText = endMessage ? endMessage.textContent : '';
+				announce(`${titleText}. ${msgText}. Opções: Tentar novamente, Voltar ao menu. Use Tab e Enter.`);
+			}
 			show(endView);
 			return;
 		}
@@ -526,6 +752,22 @@
 			answerInput.focus();
 		}
 		updateProgressHUD();
+
+		// Narração da pergunta atual para acessibilidade
+		try {
+			const qText = questionText ? questionText.textContent : '';
+			if (qText) {
+				const spoken = qText
+					.replace(/×/g, ' vezes ')
+					.replace(/÷/g, ' dividido por ')
+					.replace(/\+/g, ' mais ')
+					.replace(/-/g, ' menos ')
+					.replace(/=/g, ' igual a ')
+					.replace(/\?/g, '');
+				// Apenas falar a conta para agilizar
+				announce(spoken);
+			}
+		} catch {}
 	}
 
 	function startPlanet(key, level = 1) {
@@ -618,77 +860,6 @@
 	}
 
 	// Função para renderizar o modal de níveis com trilha
-	function renderLevelModal(planetKey) {
-		if (!levelModal || !levelButtons) return;
-
-		const planet = planets[planetKey];
-		const planetInfo = getPlanetInfo(planetKey);
-		const levels = state.levels[planetKey] || [false, false, false];
-		const progressPercent = calculateTrackProgress(levels);
-		const completedCount = levels.filter(Boolean).length;
-
-		// Determinar próximo planeta para mensagem de desbloqueio
-		const nextPlanet = {
-			terra: 'Marte',
-			marte: 'Saturno',
-			saturno: 'Andrômeda',
-			andromeda: null
-		}[planetKey];
-
-		const progressPercentBar = progressPercent !== 100
-			? `width: ${progressPercent}%`
-			: '';
-
-		levelButtons.innerHTML = `
-		<!-- Informações do planeta -->
-		<div class="planet-info">
-			<div class="planet-icon">${planet.icon}</div>
-			<div class="planet-details">
-				<h3>${planetInfo.name}</h3>
-				<p>${planetInfo.desc}</p>
-			</div>
-		</div>
-
-		<!-- Trilha de níveis -->
-		<div class="track-line"></div>
-		<div class="track-progress" style="${progressPercentBar}"></div>
-		<div class="level-track">
-			
-			<div class="levels-container">
-				${planetInfo.levels.map((levelInfo, index) => {
-			const levelNum = index + 1;
-			const isCompleted = levels[index];
-			const isAvailable = index === 0 || levels[index - 1]; // Primeiro nível sempre disponível, demais dependem do anterior
-
-			let stateClass = 'locked';
-			if (isCompleted) stateClass = 'completed';
-			else if (isAvailable) stateClass = 'available';
-
-			return `
-						<div class="level-station ${stateClass}" ${isAvailable ? `onclick="selectLevel('${planetKey}', ${levelNum})"` : ''}>
-							<div class="station-node">
-								<span class="level-number">${levelNum}</span>
-							</div>
-							<div class="station-info">
-								<div class="level-title">${levelInfo.title}</div>
-								<div class="level-description">${levelInfo.desc}</div>
-								<div class="difficulty-stars">
-									${generateStars(levelNum)}
-								</div>
-							</div>
-						</div>
-					`;
-		}).join('')}
-			</div>
-		</div>
-
-		<!-- Informações de conclusão -->
-		<div class="completion-info">
-			<span class="progress-text">Progresso: ${completedCount}/3 níveis concluídos</span><br>
-			${nextPlanet ? `Complete pelo menos 1 nível para desbloquear ${nextPlanet}!` : 'Parabéns! Você conquistou toda a galáxia!'}
-		</div>
-	`;
-	}
 
 	// Atualizar o evento de clique dos botões de planeta
 	planetButtons.forEach((btn) => {
@@ -704,6 +875,14 @@
 			// Renderizar modal com trilha
 			renderLevelModal(key);
 			levelModal.setAttribute('aria-hidden', 'false');
+			trapFocus(levelModal);
+			announce(`Selecionado ${planets[key].name}. Escolha o nível usando Tab e Enter.`);
+		});
+		// Anunciar ao focar com teclado
+		btn.addEventListener('focus', () => {
+			if (btn.disabled) return;
+			const msg = btn.getAttribute('data-speak') || btn.textContent.trim();
+			speak(msg, { interrupt: false, rate: 1.0 });
 		});
 	});
 
@@ -721,6 +900,7 @@
 					feedback.textContent = `Correto! +${fuelGainOnCorrect} combustível`;
 					feedback.className = 'feedback ok';
 				}
+				announce('Resposta correta. Combustível ganho.');
 				fuel = clamp(fuel + fuelGainOnCorrect, 0, initialFuel);
 				// Avança nave: distribuir 100% pelas questões do planeta
 				const step = (100 / totalQuestions) * progressPerCorrectMultiplier;
@@ -738,6 +918,7 @@
 					feedback.textContent = 'Ops, tente novamente!';
 					feedback.className = 'feedback err';
 				}
+				announce('Resposta incorreta. Tente novamente.');
 				// Sem penalidade extra além do tempo/combustível correndo
 				if (answerInput) answerInput.select();
 			}
@@ -752,22 +933,33 @@
 			updateFuelHUD();
 			toMenu();
 		});
+		// TTS ao focar e dica
+		backToMenu.addEventListener('focus', () => speak('Voltar ao menu. Pressione Enter para retornar ao menu principal.', { interrupt: true }));
 	}
 	if (retryPlanet) {
 		retryPlanet.addEventListener('click', () => {
 			if (currentPlanetKey) startPlanet(currentPlanetKey, currentLevel);
 			else toMenu();
 		});
+		// TTS ao focar e dica
+		retryPlanet.addEventListener('focus', () => speak('Tentar novamente. Pressione Enter para recomeçar este planeta.', { interrupt: true }));
 	}
 
 	// Eventos da Loja
 	if (openShopBtn) openShopBtn.addEventListener('click', openShop);
+	if (openShopBtn) openShopBtn.addEventListener('focus', () => speak('Abrir loja. Pressione Enter para abrir.', { interrupt: true }));
+	if (closeShopBtn) closeShopBtn.addEventListener('focus', () => speak('Fechar loja. Botão X. Pressione Enter para fechar.', { interrupt: true }));
 	if (closeShopBtn) closeShopBtn.addEventListener('click', closeShop);
 	if (shopModal) shopModal.addEventListener('click', (e) => { if (e.target === shopModal) closeShop(); });
+	if (openShopBtn) openShopBtn.addEventListener('click', () => announce('Loja aberta. Use Tab para navegar pelas melhorias.'));
+	if (closeShopBtn) closeShopBtn.addEventListener('click', () => announce('Loja fechada.'));
 
 	// Eventos modal de níveis
-	if (closeLevelBtn) closeLevelBtn.addEventListener('click', () => levelModal && levelModal.setAttribute('aria-hidden', 'true'));
-	if (levelModal) levelModal.addEventListener('click', (e) => { if (e.target === levelModal) levelModal.setAttribute('aria-hidden', 'true'); });
+	if (closeLevelBtn) closeLevelBtn.addEventListener('click', () => { if (levelModal) { levelModal.setAttribute('aria-hidden', 'true'); releaseFocus(levelModal); } });
+	if (closeLevelBtn) closeLevelBtn.addEventListener('focus', () => speak('Fechar seleção de níveis. Botão X. Pressione Enter para fechar.', { interrupt: true }));
+	if (giveUpBtn) giveUpBtn.addEventListener('focus', () => speak('Desistir e voltar ao menu. Pressione Enter para voltar ao menu.', { interrupt: true }));
+	if (levelModal) levelModal.addEventListener('click', (e) => { if (e.target === levelModal) { levelModal.setAttribute('aria-hidden', 'true'); releaseFocus(levelModal); } });
+	if (closeLevelBtn) closeLevelBtn.addEventListener('click', () => announce('Seleção de nível fechada.'));
 
 	// Animação de fundo: estrela + nave simples
 	if (bg && bg.getContext) {
@@ -1172,12 +1364,51 @@ const planetsBg = [
 	// CORREÇÃO: Salvar estado inicial e aplicar upgrades
 	save(state);
 
+	// ===== Focus trap (manter foco dentro da modal quando aberta) =====
+	const FOCUSABLE_SELECTOR = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+	let lastFocusedBeforeModal = null;
+	function trapFocus(container) {
+		if (!container) return;
+		lastFocusedBeforeModal = document.activeElement;
+		const focusables = Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR));
+		const first = focusables[0];
+		const last = focusables[focusables.length - 1];
+		// focar primeiro elemento útil
+		if (first) first.focus();
+		function handleKey(e) {
+			if (e.key === 'Tab') {
+				if (focusables.length === 0) { e.preventDefault(); return; }
+				if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+				else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+			}
+			if (e.key === 'Escape') {
+				// fechar a modal correspondente
+				if (container === shopModal) closeShop();
+				if (container === levelModal) { levelModal.setAttribute('aria-hidden', 'true'); releaseFocus(levelModal); }
+			}
+		}
+		container.__focusTrapHandler = handleKey;
+		document.addEventListener('keydown', handleKey);
+	}
+	function releaseFocus(container) {
+		if (!container) return;
+		const handler = container.__focusTrapHandler;
+		if (handler) document.removeEventListener('keydown', handler);
+		container.__focusTrapHandler = null;
+		if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+			lastFocusedBeforeModal.focus();
+		}
+	}
+
 	// Inicialização
 	refreshMenuLocks();
 	applyAllUpgrades();
 	updateFuelHUD();
 	updateProgressHUD();
+	initResourcePills();
 	show(menuView);
+	updateTTSToggleUI();
+	setTimeout(() => { speak('Bem-vindo ao Explorador da Matemática. Use Tab para navegar.', { interrupt: false, rate: 1.0 }); }, 800);
 
 	// Debug log para verificar se está funcionando
 	console.log('🚀 Jogo inicializado!');
